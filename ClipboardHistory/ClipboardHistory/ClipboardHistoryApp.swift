@@ -6,7 +6,7 @@ struct ClipboardHistoryApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {
-        MenuBarExtra("ClipboardHistory", image: "MenuBarIcon") {
+        MenuBarExtra("Clipnyx", image: "MenuBarIcon") {
             MenuBarView()
                 .environment(appDelegate.clipboardManager)
         }

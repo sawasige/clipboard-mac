@@ -1,14 +1,13 @@
-@preconcurrency import Carbon
+import Carbon.HIToolbox
 import AppKit
 
 final class HotKeyManager: @unchecked Sendable {
     static let shared = HotKeyManager()
 
     private static let defaultKeyCode: UInt32 = 9 // V key
-    private static let defaultModifiers: UInt32 = UInt32(cmdKey | shiftKey)
+    private static let defaultModifiers: UInt = NSEvent.ModifierFlags([.command, .shift]).rawValue
 
-    private var hotKeyRef: EventHotKeyRef?
-    private var eventHandler: EventHandlerRef?
+    private var globalMonitor: Any?
     var onHotKey: (() -> Void)?
 
     var currentKeyCode: UInt32 {
@@ -19,9 +18,9 @@ final class HotKeyManager: @unchecked Sendable {
         set { UserDefaults.standard.set(newValue, forKey: "hotKeyKeyCode") }
     }
 
-    var currentModifiers: UInt32 {
+    var currentModifiers: UInt {
         get {
-            let stored = UserDefaults.standard.object(forKey: "hotKeyModifiers") as? UInt32
+            let stored = UserDefaults.standard.object(forKey: "hotKeyModifiers") as? UInt
             return stored ?? Self.defaultModifiers
         }
         set { UserDefaults.standard.set(newValue, forKey: "hotKeyModifiers") }
@@ -34,53 +33,22 @@ final class HotKeyManager: @unchecked Sendable {
     func register() {
         unregister()
 
-        let hotKeyID = EventHotKeyID(signature: OSType(0x434C4950), id: 1) // "CLIP"
+        let keyCode = UInt16(currentKeyCode)
+        let modifiers = NSEvent.ModifierFlags(rawValue: currentModifiers)
+            .intersection([.command, .shift, .option, .control])
 
-        var eventType = EventTypeSpec(
-            eventClass: OSType(kEventClassKeyboard),
-            eventKind: UInt32(kEventHotKeyPressed)
-        )
-
-        // Install handler
-        let status = InstallEventHandler(
-            GetApplicationEventTarget(),
-            hotKeyCallback,
-            1,
-            &eventType,
-            UnsafeMutableRawPointer(Unmanaged.passUnretained(self).toOpaque()),
-            &eventHandler
-        )
-
-        guard status == noErr else {
-            print("Failed to install event handler: \(status)")
-            return
+        globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            let eventMods = event.modifierFlags.intersection([.command, .shift, .option, .control])
+            if event.keyCode == keyCode && eventMods == modifiers {
+                self?.handleHotKey()
+            }
         }
-
-        var ref: EventHotKeyRef?
-        let regStatus = RegisterEventHotKey(
-            currentKeyCode,
-            currentModifiers,
-            hotKeyID,
-            GetApplicationEventTarget(),
-            0,
-            &ref
-        )
-
-        guard regStatus == noErr else {
-            print("Failed to register hotkey: \(regStatus)")
-            return
-        }
-        hotKeyRef = ref
     }
 
     func unregister() {
-        if let ref = hotKeyRef {
-            UnregisterEventHotKey(ref)
-            hotKeyRef = nil
-        }
-        if let handler = eventHandler {
-            RemoveEventHandler(handler)
-            eventHandler = nil
+        if let monitor = globalMonitor {
+            NSEvent.removeMonitor(monitor)
+            globalMonitor = nil
         }
     }
 
@@ -115,16 +83,17 @@ final class HotKeyManager: @unchecked Sendable {
         return String(utf16CodeUnits: chars, count: length).uppercased()
     }
 
-    static func modifiersToString(_ modifiers: UInt32) -> String {
+    static func modifiersToString(_ modifiers: UInt) -> String {
+        let flags = NSEvent.ModifierFlags(rawValue: modifiers)
         var result = ""
-        if modifiers & UInt32(controlKey) != 0 { result += "⌃" }
-        if modifiers & UInt32(optionKey) != 0 { result += "⌥" }
-        if modifiers & UInt32(shiftKey) != 0 { result += "⇧" }
-        if modifiers & UInt32(cmdKey) != 0 { result += "⌘" }
+        if flags.contains(.control) { result += "⌃" }
+        if flags.contains(.option) { result += "⌥" }
+        if flags.contains(.shift) { result += "⇧" }
+        if flags.contains(.command) { result += "⌘" }
         return result
     }
 
-    static func displayString(keyCode: UInt32, modifiers: UInt32) -> String {
+    static func displayString(keyCode: UInt32, modifiers: UInt) -> String {
         modifiersToString(modifiers) + keyCodeToString(keyCode)
     }
 
@@ -141,16 +110,4 @@ final class HotKeyManager: @unchecked Sendable {
     static func checkAccessibility() -> Bool {
         AXIsProcessTrusted()
     }
-}
-
-// C callback function
-private func hotKeyCallback(
-    nextHandler: EventHandlerCallRef?,
-    event: EventRef?,
-    userData: UnsafeMutableRawPointer?
-) -> OSStatus {
-    guard let userData else { return OSStatus(eventNotHandledErr) }
-    let manager = Unmanaged<HotKeyManager>.fromOpaque(userData).takeUnretainedValue()
-    manager.handleHotKey()
-    return noErr
 }

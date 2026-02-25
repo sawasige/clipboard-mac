@@ -1,7 +1,6 @@
 import SwiftUI
 import AppKit
 import ServiceManagement
-@preconcurrency import Carbon
 
 struct SettingsView: View {
     @Environment(ClipboardManager.self) private var clipboardManager
@@ -146,7 +145,7 @@ private struct AccessibilityStatusView: View {
 
 private struct HotKeyRecorderRow: View {
     @State private var keyCode: UInt32 = HotKeyManager.shared.currentKeyCode
-    @State private var modifiers: UInt32 = HotKeyManager.shared.currentModifiers
+    @State private var modifiers: UInt = HotKeyManager.shared.currentModifiers
     @State private var isRecording = false
     @State private var eventMonitor: Any?
 
@@ -175,16 +174,17 @@ private struct HotKeyRecorderRow: View {
         isRecording = true
 
         eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-            let carbonModifiers = event.carbonModifiers
+            let cocoaModifiers = event.modifierFlags
+                .intersection([.command, .shift, .option, .control]).rawValue
             // Require at least one modifier key (⌘, ⌥, ⌃, ⇧)
-            guard carbonModifiers != 0 else { return nil }
+            guard cocoaModifiers != 0 else { return nil }
 
             let newKeyCode = UInt32(event.keyCode)
             keyCode = newKeyCode
-            modifiers = carbonModifiers
+            modifiers = cocoaModifiers
 
             HotKeyManager.shared.currentKeyCode = newKeyCode
-            HotKeyManager.shared.currentModifiers = carbonModifiers
+            HotKeyManager.shared.currentModifiers = cocoaModifiers
 
             stopRecording()
             return nil
@@ -199,18 +199,6 @@ private struct HotKeyRecorderRow: View {
         guard isRecording else { return }
         isRecording = false
         HotKeyManager.shared.register()
-    }
-}
-
-private extension NSEvent {
-    /// Convert Cocoa modifier flags to Carbon modifier mask
-    var carbonModifiers: UInt32 {
-        var carbon: UInt32 = 0
-        if modifierFlags.contains(.command) { carbon |= UInt32(cmdKey) }
-        if modifierFlags.contains(.shift) { carbon |= UInt32(shiftKey) }
-        if modifierFlags.contains(.option) { carbon |= UInt32(optionKey) }
-        if modifierFlags.contains(.control) { carbon |= UInt32(controlKey) }
-        return carbon
     }
 }
 
