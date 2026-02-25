@@ -1,0 +1,91 @@
+import SwiftUI
+
+struct ItemDetailView: View {
+    let item: ClipboardItem
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // Header
+            HStack {
+                Image(systemName: item.category.icon)
+                    .foregroundStyle(item.category.color)
+                Text(item.category.label)
+                    .font(.headline)
+                Spacer()
+            }
+
+            Divider()
+
+            // Details
+            LabeledContent("カテゴリ") {
+                Label(item.category.label, systemImage: item.category.icon)
+                    .foregroundStyle(item.category.color)
+            }
+
+            LabeledContent("コピー日時") {
+                Text(item.timestamp, format: .dateTime
+                    .year().month().day()
+                    .hour().minute().second()
+                )
+            }
+
+            LabeledContent("データサイズ") {
+                Text(item.formattedDataSize)
+            }
+
+            Divider()
+
+            // Preview
+            Text("プレビュー")
+                .font(.subheadline.bold())
+
+            if let thumbnailData = item.thumbnailData,
+               let nsImage = NSImage(data: thumbnailData) {
+                Image(nsImage: nsImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(maxHeight: 150)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+            }
+
+            Text(item.previewText)
+                .font(.system(size: 12))
+                .lineLimit(10)
+                .textSelection(.enabled)
+                .padding(8)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color(nsColor: .controlBackgroundColor))
+                .clipShape(RoundedRectangle(cornerRadius: 6))
+
+            Divider()
+
+            // Data types
+            Text("データ型")
+                .font(.subheadline.bold())
+
+            ForEach(item.representations, id: \.typeRawValue) { rep in
+                HStack {
+                    Text(rep.typeRawValue)
+                        .font(.system(size: 11, design: .monospaced))
+                        .textSelection(.enabled)
+                    Spacer()
+                    Text(formatBytes(rep.data.count))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .padding()
+        .frame(width: 350)
+    }
+
+    private func formatBytes(_ bytes: Int) -> String {
+        if bytes < 1024 {
+            return "\(bytes) B"
+        } else if bytes < 1024 * 1024 {
+            return String(format: "%.1f KB", Double(bytes) / 1024.0)
+        } else {
+            return String(format: "%.1f MB", Double(bytes) / (1024.0 * 1024.0))
+        }
+    }
+}
