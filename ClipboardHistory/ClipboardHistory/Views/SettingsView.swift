@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import ServiceManagement
 
 struct SettingsView: View {
     @Environment(ClipboardManager.self) private var clipboardManager
@@ -64,6 +65,10 @@ private struct GeneralTab: View {
                 AccessibilityStatusView()
             }
 
+            Section("起動") {
+                LaunchAtLoginToggle()
+            }
+
             Section("情報") {
                 LabeledContent("バージョン") {
                     Text("1.0.0")
@@ -76,7 +81,26 @@ private struct GeneralTab: View {
     }
 }
 
-// MARK: - Filter Tab
+// MARK: - Launch at Login
+
+private struct LaunchAtLoginToggle: View {
+    @State private var isEnabled = SMAppService.mainApp.status == .enabled
+
+    var body: some View {
+        Toggle("ログイン時に起動", isOn: $isEnabled)
+            .onChange(of: isEnabled) { _, newValue in
+                do {
+                    if newValue {
+                        try SMAppService.mainApp.register()
+                    } else {
+                        try SMAppService.mainApp.unregister()
+                    }
+                } catch {
+                    isEnabled = SMAppService.mainApp.status == .enabled
+                }
+            }
+    }
+}
 
 // MARK: - Accessibility Status
 
