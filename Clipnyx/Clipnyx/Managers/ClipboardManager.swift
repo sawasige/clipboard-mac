@@ -15,7 +15,7 @@ final class ClipboardManager: @unchecked Sendable {
 
     private static let historyDirectoryURL: URL = {
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        return appSupport.appendingPathComponent("ClipboardHistory", isDirectory: true)
+        return appSupport.appendingPathComponent("Clipnyx", isDirectory: true)
     }()
 
     private static let historyFileURL: URL = {

@@ -2,9 +2,9 @@
 set -euo pipefail
 
 APP_NAME="Clipnyx"
-SCHEME="ClipboardHistory"
+SCHEME="Clipnyx"
 PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-PROJECT_PATH="${PROJECT_DIR}/ClipboardHistory/ClipboardHistory.xcodeproj"
+PROJECT_PATH="${PROJECT_DIR}/Clipnyx/Clipnyx.xcodeproj"
 BUILD_DIR="${PROJECT_DIR}/build"
 ARCHIVE_PATH="${BUILD_DIR}/${APP_NAME}.xcarchive"
 EXPORT_DIR="${BUILD_DIR}/export"

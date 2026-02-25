@@ -7,26 +7,26 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		8A0000000000000000000004 /* ClipboardHistory.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ClipboardHistory.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		8A0000000000000000000004 /* Clipnyx.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Clipnyx.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		8A0000000000000000000010 /* Exceptions for "ClipboardHistory" folder in "ClipboardHistory" target */ = {
+		8A0000000000000000000010 /* Exceptions for "Clipnyx" folder in "Clipnyx" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
-			target = 8A0000000000000000000006 /* ClipboardHistory */;
+			target = 8A0000000000000000000006 /* Clipnyx */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		8A0000000000000000000005 /* ClipboardHistory */ = {
+		8A0000000000000000000005 /* Clipnyx */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				8A0000000000000000000010 /* Exceptions for "ClipboardHistory" folder in "ClipboardHistory" target */,
+				8A0000000000000000000010 /* Exceptions for "Clipnyx" folder in "Clipnyx" target */,
 			);
-			path = ClipboardHistory;
+			path = Clipnyx;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -45,14 +45,14 @@
 		8A0000000000000000000002 = {
 			isa = PBXGroup;
 			children = (
-				8A0000000000000000000005 /* ClipboardHistory */,
+				8A0000000000000000000005 /* Clipnyx */,
 			);
 			sourceTree = "<group>";
 		};
 		8A0000000000000000000003 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				8A0000000000000000000004 /* ClipboardHistory.app */,
+				8A0000000000000000000004 /* Clipnyx.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -60,9 +60,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		8A0000000000000000000006 /* ClipboardHistory */ = {
+		8A0000000000000000000006 /* Clipnyx */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 8A000000000000000000000B /* Build configuration list for PBXNativeTarget "ClipboardHistory" */;
+			buildConfigurationList = 8A000000000000000000000B /* Build configuration list for PBXNativeTarget "Clipnyx" */;
 			buildPhases = (
 				8A0000000000000000000007 /* Sources */,
 				8A0000000000000000000008 /* Frameworks */,
@@ -73,13 +73,13 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				8A0000000000000000000005 /* ClipboardHistory */,
+				8A0000000000000000000005 /* Clipnyx */,
 			);
-			name = ClipboardHistory;
+			name = Clipnyx;
 			packageProductDependencies = (
 			);
-			productName = ClipboardHistory;
-			productReference = 8A0000000000000000000004 /* ClipboardHistory.app */;
+			productName = Clipnyx;
+			productReference = 8A0000000000000000000004 /* Clipnyx.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -92,7 +92,7 @@
 				LastSwiftUpdateCheck = 1620;
 				LastUpgradeCheck = 2620;
 			};
-			buildConfigurationList = 8A000000000000000000000A /* Build configuration list for PBXProject "ClipboardHistory" */;
+			buildConfigurationList = 8A000000000000000000000A /* Build configuration list for PBXProject "Clipnyx" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -107,7 +107,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				8A0000000000000000000006 /* ClipboardHistory */,
+				8A0000000000000000000006 /* Clipnyx */,
 			);
 		};
 /* End PBXProject section */
@@ -261,7 +261,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = Clipboard;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
-				CODE_SIGN_ENTITLEMENTS = ClipboardHistory/ClipboardHistory.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Clipnyx/Clipnyx.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -269,7 +269,7 @@
 				DEVELOPMENT_TEAM = U9296HT99T;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = ClipboardHistory/Info.plist;
+				INFOPLIST_FILE = Clipnyx/Info.plist;
 				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.himatsubu.Clipnyx;
 				PRODUCT_NAME = Clipnyx;
@@ -284,7 +284,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = Clipboard;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
-				CODE_SIGN_ENTITLEMENTS = ClipboardHistory/ClipboardHistory.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Clipnyx/Clipnyx.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -292,7 +292,7 @@
 				DEVELOPMENT_TEAM = U9296HT99T;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = ClipboardHistory/Info.plist;
+				INFOPLIST_FILE = Clipnyx/Info.plist;
 				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.himatsubu.Clipnyx;
 				PRODUCT_NAME = Clipnyx;
@@ -304,7 +304,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		8A000000000000000000000A /* Build configuration list for PBXProject "ClipboardHistory" */ = {
+		8A000000000000000000000A /* Build configuration list for PBXProject "Clipnyx" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				8A000000000000000000000C /* Debug */,
@@ -313,7 +313,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		8A000000000000000000000B /* Build configuration list for PBXNativeTarget "ClipboardHistory" */ = {
+		8A000000000000000000000B /* Build configuration list for PBXNativeTarget "Clipnyx" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				8A000000000000000000000E /* Debug */,

@@ -2,7 +2,7 @@ import SwiftUI
 @preconcurrency import ApplicationServices
 
 @main
-struct ClipboardHistoryApp: App {
+struct ClipnyxApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {
