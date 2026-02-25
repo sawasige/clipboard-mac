@@ -1,34 +1,7 @@
 {
-  "fill" : {
-    "automatic-gradient" : "display-p3:0.93873,0.96783,0.80206,1.00000"
-  },
+  "fill" : "automatic",
   "groups" : [
     {
-      "layers" : [
-        {
-          "hidden" : true,
-          "image-name" : "SVG Image.svg",
-          "name" : "SVG Image",
-          "position" : {
-            "scale" : 2,
-            "translation-in-points" : [
-              0,
-              0
-            ]
-          }
-        }
-      ],
-      "shadow" : {
-        "kind" : "neutral",
-        "opacity" : 0.5
-      },
-      "translucency" : {
-        "enabled" : true,
-        "value" : 0.5
-      }
-    },
-    {
-      "hidden" : false,
       "layers" : [
         {
           "image-name" : "icon_layer_4_clip.svg",
@@ -40,22 +13,50 @@
               0
             ]
           }
-        },
+        }
+      ],
+      "lighting" : "individual",
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : false,
+        "value" : 0.5
+      }
+    },
+    {
+      "blur-material" : null,
+      "hidden" : false,
+      "layers" : [
         {
           "blend-mode" : "normal",
           "glass" : true,
           "image-name" : "icon_layer_3_badge.svg",
           "name" : "icon_layer_3_badge",
           "position" : {
-            "scale" : 2,
+            "scale" : 3,
             "translation-in-points" : [
-              0,
-              0
+              -40.6171875,
+              -138
             ]
           }
-        },
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : false,
+        "value" : 0.5
+      }
+    },
+    {
+      "layers" : [
         {
           "blend-mode" : "normal",
+          "fill" : "automatic",
           "glass" : true,
           "image-name" : "icon_layer_2_papers.svg",
           "name" : "icon_layer_2_papers",
@@ -66,7 +67,22 @@
               0
             ]
           }
-        },
+        }
+      ],
+      "lighting" : "individual",
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : false,
+        "value" : 0.5
+      }
+    },
+    {
+      "blur-material" : null,
+      "hidden" : false,
+      "layers" : [
         {
           "image-name" : "icon_layer_1_board.svg",
           "name" : "icon_layer_1_board",
@@ -79,12 +95,14 @@
           }
         }
       ],
+      "lighting" : "individual",
       "shadow" : {
         "kind" : "neutral",
         "opacity" : 0.5
       },
+      "specular" : true,
       "translucency" : {
-        "enabled" : true,
+        "enabled" : false,
         "value" : 0.5
       }
     }

@@ -111,7 +111,9 @@ final class PopupPanelController {
         ) { [weak self] notification in
             guard let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication,
                   app.bundleIdentifier != Bundle.main.bundleIdentifier else { return }
-            self?.close()
+            MainActor.assumeIsolated {
+                self?.close()
+            }
         }
     }
 
