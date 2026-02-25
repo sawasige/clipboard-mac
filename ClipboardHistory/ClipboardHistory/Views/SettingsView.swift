@@ -106,8 +106,6 @@ private struct LaunchAtLoginToggle: View {
 
 private struct AccessibilityStatusView: View {
     @State private var isGranted = AXIsProcessTrusted()
-    @State private var timer: Timer?
-
     var body: some View {
         LabeledContent("権限の状態") {
             HStack(spacing: 6) {
@@ -133,20 +131,11 @@ private struct AccessibilityStatusView: View {
             isGranted = AXIsProcessTrusted()
         }
         .font(.caption)
-        .onAppear {
-            // 権限変更を自動検知（2秒間隔）
-            timer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { _ in
-                let current = AXIsProcessTrusted()
-                if current != isGranted {
-                    DispatchQueue.main.async {
-                        isGranted = current
-                    }
-                }
+        .task {
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(2))
+                isGranted = AXIsProcessTrusted()
             }
-        }
-        .onDisappear {
-            timer?.invalidate()
-            timer = nil
         }
     }
 }

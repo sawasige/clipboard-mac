@@ -1,0 +1,131 @@
+<svg id="app-icon-svg" width="100%" height="100%" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <!-- ドロップシャドウ -->
+                                <filter id="shadow-lg" x="-20%" y="-20%" width="140%" height="140%">
+                                    <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#000000" flood-opacity="0.35">
+</feDropShadow>
+                                </filter>
+                                <filter id="shadow-md" x="-10%" y="-10%" width="120%" height="120%">
+                                    <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.25">
+</feDropShadow>
+                                </filter>
+                                <filter id="shadow-sm" x="-10%" y="-10%" width="120%" height="120%">
+                                    <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.15">
+</feDropShadow>
+                                </filter>
+
+                                <!-- グラデーション定義 -->
+                                <linearGradient id="boardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#4b5563">
+</stop> <!-- 上部：明るめのダークグレー -->
+                                    <stop offset="100%" stop-color="#1f2937">
+</stop> <!-- 下部：暗めのダークグレー -->
+                                </linearGradient>
+                                
+                                <linearGradient id="clipGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" stop-color="#ffffff">
+</stop>
+                                    <stop offset="40%" stop-color="#e5e7eb">
+</stop>
+                                    <stop offset="100%" stop-color="#9ca3af">
+</stop>
+                                </linearGradient>
+
+                                <linearGradient id="paperGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" stop-color="#ffffff">
+</stop>
+                                    <stop offset="100%" stop-color="#f8fafc">
+</stop>
+                                </linearGradient>
+
+                                <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#3b82f6">
+</stop> <!-- ブルーアクセント -->
+                                    <stop offset="100%" stop-color="#1d4ed8">
+</stop>
+                                </linearGradient>
+                            </defs>
+
+                            <!-- 1. クリップボード本体 -->
+                            <rect x="76" y="48" width="360" height="432" rx="40" fill="url(#boardGrad)" filter="url(#shadow-lg)">
+</rect>
+                            <!-- ボードのハイライト（立体感） -->
+                            <rect x="78" y="50" width="356" height="428" rx="38" fill="none" stroke="#ffffff" stroke-width="2" opacity="0.15">
+</rect>
+
+                            <!-- 2. 重なる紙（履歴の表現） -->
+                            
+                            <!-- 紙3 (一番奥) -->
+                            <g transform="rotate(9, 256, 120)">
+                                <rect x="116" y="88" width="280" height="360" rx="8" fill="#cbd5e1" filter="url(#shadow-sm)">
+</rect>
+                                <rect x="116" y="88" width="280" height="360" rx="8" fill="none" stroke="#ffffff" stroke-width="1.5" opacity="0.4">
+</rect>
+                            </g>
+
+                            <!-- 紙2 (中間) -->
+                            <g transform="rotate(4.5, 256, 120)">
+                                <rect x="116" y="88" width="280" height="360" rx="8" fill="#e2e8f0" filter="url(#shadow-sm)">
+</rect>
+                                <rect x="116" y="88" width="280" height="360" rx="8" fill="none" stroke="#ffffff" stroke-width="1.5" opacity="0.6">
+</rect>
+                            </g>
+
+                            <!-- 紙1 (一番手前) -->
+                            <g transform="rotate(0, 256, 120)">
+                                <rect x="116" y="88" width="280" height="360" rx="8" fill="url(#paperGrad)" filter="url(#shadow-md)">
+</rect>
+                                <rect x="116" y="88" width="280" height="360" rx="8" fill="none" stroke="#ffffff" stroke-width="1.5" opacity="0.9">
+</rect>
+                                
+                                <!-- 紙の上のコンテンツ（クリップボードの中身のモック） -->
+                                <!-- ヘッダーライン -->
+                                <rect x="156" y="140" width="90" height="16" rx="8" fill="#94a3b8" opacity="0.4">
+</rect>
+                                
+                                <!-- リストアイテム1 -->
+                                <rect x="156" y="184" width="200" height="12" rx="6" fill="#cbd5e1">
+</rect>
+                                <rect x="156" y="208" width="140" height="12" rx="6" fill="#cbd5e1">
+</rect>
+                                
+                                <!-- リストアイテム2 -->
+                                <rect x="156" y="252" width="180" height="12" rx="6" fill="#cbd5e1">
+</rect>
+                                <rect x="156" y="276" width="160" height="12" rx="6" fill="#cbd5e1">
+</rect>
+
+                                <!-- リストアイテム3 -->
+                                <rect x="156" y="320" width="120" height="12" rx="6" fill="#cbd5e1">
+</rect>
+                            </g>
+
+                            <!-- 3. 右下の時計バッジ（履歴・タイムトラベルのシンボル） -->
+                            <g transform="translate(290, 310)">
+                                <!-- バッジベース -->
+                                <circle cx="56" cy="56" r="64" fill="url(#accentGrad)" filter="url(#shadow-md)">
+</circle>
+                                <!-- バッジ内側のハイライト -->
+                                <circle cx="56" cy="56" r="60" fill="none" stroke="#ffffff" stroke-width="2" opacity="0.3">
+</circle>
+                                
+                                <!-- 時計の文字盤枠 -->
+                                <circle cx="56" cy="56" r="32" fill="none" stroke="#ffffff" stroke-width="6">
+</circle>
+                                <!-- 時計の針 -->
+                                <polyline points="56,36 56,56 68,68" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+</polyline>
+                            </g>
+
+                            <!-- 4. 上部のクリップ金具 -->
+                            <rect x="176" y="20" width="160" height="68" rx="24" fill="url(#clipGrad)" filter="url(#shadow-lg)">
+</rect>
+                            <!-- 金具のハイライト -->
+                            <rect x="178" y="22" width="156" height="64" rx="22" fill="none" stroke="#ffffff" stroke-width="2" opacity="0.7">
+</rect>
+                            <!-- クリップの穴 -->
+                            <circle cx="256" cy="54" r="12" fill="#1f2937" filter="url(#shadow-sm)">
+</circle>
+                            <circle cx="256" cy="54" r="12" fill="none" stroke="#000000" stroke-width="1" opacity="0.4">
+</circle>
+                        </svg>

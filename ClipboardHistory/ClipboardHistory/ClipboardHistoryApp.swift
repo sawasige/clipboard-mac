@@ -1,11 +1,12 @@
 import SwiftUI
+@preconcurrency import ApplicationServices
 
 @main
 struct ClipboardHistoryApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {
-        MenuBarExtra("ClipboardHistory", systemImage: "clipboard") {
+        MenuBarExtra("ClipboardHistory", image: "MenuBarIcon") {
             MenuBarView()
                 .environment(appDelegate.clipboardManager)
         }
@@ -26,6 +27,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var popupController = PopupPanelController()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // アクセシビリティ権限の確認（未登録時のみシステムダイアログ表示）
+        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true] as CFDictionary
+        AXIsProcessTrustedWithOptions(options)
+
         // Register hotkey
         HotKeyManager.shared.onHotKey = { [weak self] in
             guard let self else { return }

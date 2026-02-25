@@ -14,6 +14,7 @@ final class PopupPanelController {
     private var panel: NSPanel?
     private var previousApp: NSRunningApplication?
     private var clickMonitor: Any?
+    private var appDeactivationObserver: Any?
     var isVisible: Bool = false
 
     func toggle(clipboardManager: ClipboardManager) {
@@ -102,12 +103,26 @@ final class PopupPanelController {
         clickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
             self?.close()
         }
+
+        // ⌘Tab 等で他のアプリがアクティブになったら閉じる
+        appDeactivationObserver = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didActivateApplicationNotification,
+            object: nil, queue: .main
+        ) { [weak self] notification in
+            guard let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication,
+                  app.bundleIdentifier != Bundle.main.bundleIdentifier else { return }
+            self?.close()
+        }
     }
 
     func close() {
         if let monitor = clickMonitor {
             NSEvent.removeMonitor(monitor)
             clickMonitor = nil
+        }
+        if let observer = appDeactivationObserver {
+            NSWorkspace.shared.notificationCenter.removeObserver(observer)
+            appDeactivationObserver = nil
         }
         panel?.orderOut(nil)
         panel = nil
