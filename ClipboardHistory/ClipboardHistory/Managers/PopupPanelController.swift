@@ -182,10 +182,14 @@ final class PopupPanelController {
         }
 
         if let element, let text = NSPasteboard.general.string(forType: .string) {
-            let setErr = AXUIElementSetAttributeValue(
-                element, kAXSelectedTextAttribute as CFString, text as CFTypeRef
-            )
-            if setErr == .success { return }
+            var isSettable: DarwinBoolean = false
+            AXUIElementIsAttributeSettable(element, kAXSelectedTextAttribute as CFString, &isSettable)
+            if isSettable.boolValue {
+                let setErr = AXUIElementSetAttributeValue(
+                    element, kAXSelectedTextAttribute as CFString, text as CFTypeRef
+                )
+                if setErr == .success { return }
+            }
         }
 
         // フォールバック: CGEvent ⌘V
