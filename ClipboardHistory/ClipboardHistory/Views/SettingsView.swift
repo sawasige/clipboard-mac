@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 import ServiceManagement
+@preconcurrency import Carbon
 
 struct SettingsView: View {
     @Environment(ClipboardManager.self) private var clipboardManager
@@ -69,12 +70,13 @@ private struct GeneralTab: View {
                 LaunchAtLoginToggle()
             }
 
+            Section("ホットキー") {
+                HotKeyRecorderRow()
+            }
+
             Section("情報") {
                 LabeledContent("バージョン") {
                     Text("1.0.0")
-                }
-                LabeledContent("ホットキー") {
-                    Text("⌘+Shift+V")
                 }
             }
         }
@@ -137,6 +139,78 @@ private struct AccessibilityStatusView: View {
                 isGranted = AXIsProcessTrusted()
             }
         }
+    }
+}
+
+// MARK: - Hot Key Recorder
+
+private struct HotKeyRecorderRow: View {
+    @State private var keyCode: UInt32 = HotKeyManager.shared.currentKeyCode
+    @State private var modifiers: UInt32 = HotKeyManager.shared.currentModifiers
+    @State private var isRecording = false
+    @State private var eventMonitor: Any?
+
+    private var displayString: String {
+        HotKeyManager.displayString(keyCode: keyCode, modifiers: modifiers)
+    }
+
+    var body: some View {
+        LabeledContent("ホットキー") {
+            Button {
+                if isRecording {
+                    stopRecording()
+                } else {
+                    startRecording()
+                }
+            } label: {
+                Text(isRecording ? "キーを入力..." : displayString)
+                    .frame(minWidth: 80)
+            }
+            .keyboardShortcut(.none)
+        }
+    }
+
+    private func startRecording() {
+        HotKeyManager.shared.unregister()
+        isRecording = true
+
+        eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            let carbonModifiers = event.carbonModifiers
+            // Require at least one modifier key (⌘, ⌥, ⌃, ⇧)
+            guard carbonModifiers != 0 else { return nil }
+
+            let newKeyCode = UInt32(event.keyCode)
+            keyCode = newKeyCode
+            modifiers = carbonModifiers
+
+            HotKeyManager.shared.currentKeyCode = newKeyCode
+            HotKeyManager.shared.currentModifiers = carbonModifiers
+
+            stopRecording()
+            return nil
+        }
+    }
+
+    private func stopRecording() {
+        if let monitor = eventMonitor {
+            NSEvent.removeMonitor(monitor)
+            eventMonitor = nil
+        }
+        guard isRecording else { return }
+        isRecording = false
+        HotKeyManager.shared.register()
+    }
+}
+
+private extension NSEvent {
+    /// Convert Cocoa modifier flags to Carbon modifier mask
+    var carbonModifiers: UInt32 {
+        var carbon: UInt32 = 0
+        if modifierFlags.contains(.command) { carbon |= UInt32(cmdKey) }
+        if modifierFlags.contains(.shift) { carbon |= UInt32(shiftKey) }
+        if modifierFlags.contains(.option) { carbon |= UInt32(optionKey) }
+        if modifierFlags.contains(.control) { carbon |= UInt32(controlKey) }
+        return carbon
     }
 }
 
