@@ -45,7 +45,7 @@ struct PopupContentView: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(.ultraThinMaterial)
+            .background(.regularMaterial)
 
             Divider()
 
@@ -129,7 +129,7 @@ struct PopupContentView: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
         }
-        .background(.ultraThinMaterial)
+        .background(.regularMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .onKeyPress(keys: [.upArrow, .downArrow, .return, .escape]) { press in
             handleKeyPress(press)
