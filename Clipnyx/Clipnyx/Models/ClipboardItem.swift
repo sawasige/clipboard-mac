@@ -53,30 +53,31 @@ struct ClipboardItem: Identifiable, Codable, Sendable {
     // MARK: - Category Classification (11-level priority)
 
     private static func classifyCategory(types: Set<String>, pasteboard: NSPasteboard) -> ClipboardContentCategory {
-        // 1. Image types
-        let imageTypes: [NSPasteboard.PasteboardType] = [.tiff, .png]
-        for imgType in imageTypes {
-            if types.contains(imgType.rawValue) {
-                return .image
-            }
-        }
-        if types.contains("public.jpeg") || types.contains("public.heic") {
-            return .image
-        }
-
-        // 2. PDF
-        if types.contains(NSPasteboard.PasteboardType.pdf.rawValue) || types.contains("com.adobe.pdf") {
-            return .pdf
-        }
-
-        // 3. File URLs
+        // 1. File URLs (Finder のファイルコピーは tiff アイコンも含むため最優先)
         if types.contains(NSPasteboard.PasteboardType.fileURL.rawValue) {
             return .fileURL
         }
 
-        // 4. Color
+        // 2. Color
         if types.contains(NSPasteboard.PasteboardType.color.rawValue) {
             return .color
+        }
+
+        // 3. PDF
+        if types.contains(NSPasteboard.PasteboardType.pdf.rawValue) || types.contains("com.adobe.pdf") {
+            return .pdf
+        }
+
+        // 4. Image types (テキストが同時に含まれる場合は画像扱いしない)
+        let hasText = types.contains(NSPasteboard.PasteboardType.string.rawValue)
+        let imageTypes: [NSPasteboard.PasteboardType] = [.tiff, .png]
+        for imgType in imageTypes {
+            if types.contains(imgType.rawValue) && !hasText {
+                return .image
+            }
+        }
+        if (types.contains("public.jpeg") || types.contains("public.heic")) && !hasText {
+            return .image
         }
 
         // 5. URL (check before rich text)
