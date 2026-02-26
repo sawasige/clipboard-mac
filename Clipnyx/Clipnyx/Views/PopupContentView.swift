@@ -140,6 +140,9 @@ struct PopupContentView: View {
         .onKeyPress(keys: [.upArrow, .downArrow, .return, .escape]) { press in
             handleKeyPress(press)
         }
+        .onKeyPress(characters: CharacterSet(charactersIn: "np")) { press in
+            handleEmacsKey(press)
+        }
         .onKeyPress(characters: .decimalDigits) { press in
             handleNumberKey(press)
         }
@@ -176,6 +179,24 @@ struct PopupContentView: View {
             return .handled
         case .escape:
             onDismiss()
+            return .handled
+        default:
+            return .ignored
+        }
+    }
+
+    private func handleEmacsKey(_ press: KeyPress) -> KeyPress.Result {
+        guard press.modifiers.contains(.control) else { return .ignored }
+        switch press.characters {
+        case "n":
+            if selectedIndex < filteredItems.count - 1 {
+                selectedIndex += 1
+            }
+            return .handled
+        case "p":
+            if selectedIndex > 0 {
+                selectedIndex -= 1
+            }
             return .handled
         default:
             return .ignored
