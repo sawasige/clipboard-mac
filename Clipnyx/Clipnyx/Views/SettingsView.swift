@@ -75,7 +75,7 @@ private struct GeneralTab: View {
 
             Section("About") {
                 LabeledContent("Version") {
-                    Text("1.0.0")
+                    Text(verbatim: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "–")
                 }
             }
         }
