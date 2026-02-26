@@ -3,32 +3,60 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Clipnyx - プライバシーポリシー</title>
+  <title>Clipnyx - Privacy Policy</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 700px; margin: 40px auto; padding: 0 20px; line-height: 1.8; color: #333; }
+    @media (prefers-color-scheme: dark) {
+      body { background: #000; color: #f5f5f7; }
+      a { color: #2997ff; }
+    }
     h1 { font-size: 1.5em; border-bottom: 1px solid #ddd; padding-bottom: 8px; }
     h2 { font-size: 1.2em; margin-top: 2em; }
     p { margin: 1em 0; }
     .updated { color: #888; font-size: 0.9em; }
+    .lang-toggle { background: none; border: 1px solid #888; border-radius: 4px; padding: 4px 12px; color: inherit; cursor: pointer; font-family: inherit; font-size: 0.85em; float: right; }
+    .lang-toggle:hover { border-color: #0071e3; color: #0071e3; }
   </style>
 </head>
 <body>
-  <h1>Clipnyx プライバシーポリシー</h1>
-  <p class="updated">最終更新日: 2026年2月26日</p>
+  <button class="lang-toggle" onclick="toggleLang()" aria-label="Switch language">EN / 日本語</button>
+  <h1 data-ja="Clipnyx プライバシーポリシー" data-en="Clipnyx Privacy Policy"></h1>
+  <p class="updated" data-ja="最終更新日: 2026年2月26日" data-en="Last updated: February 26, 2026"></p>
 
-  <h2>データの収集</h2>
-  <p>Clipnyx はユーザーの個人データを一切収集しません。</p>
+  <h2 data-ja="データの収集" data-en="Data Collection"></h2>
+  <p data-ja="Clipnyx はユーザーの個人データを一切収集しません。" data-en="Clipnyx does not collect any personal data."></p>
 
-  <h2>クリップボード履歴</h2>
-  <p>クリップボード履歴はお使いのMac上にローカル保存されます。外部サーバーへの送信は一切行いません。</p>
+  <h2 data-ja="クリップボード履歴" data-en="Clipboard History"></h2>
+  <p data-ja="クリップボード履歴はお使いのMac上にローカル保存されます。外部サーバーへの送信は一切行いません。" data-en="Clipboard history is stored locally on your Mac. It is never sent to any external server."></p>
 
-  <h2>分析・トラッキング</h2>
-  <p>Clipnyx はアナリティクスツールやトラッキングツールを使用しません。</p>
+  <h2 data-ja="分析・トラッキング" data-en="Analytics &amp; Tracking"></h2>
+  <p data-ja="Clipnyx はアナリティクスツールやトラッキングツールを使用しません。" data-en="Clipnyx does not use any analytics or tracking tools."></p>
 
-  <h2>第三者への提供</h2>
-  <p>ユーザーデータを第三者に提供、販売、共有することはありません。</p>
+  <h2 data-ja="第三者への提供" data-en="Third-Party Sharing"></h2>
+  <p data-ja="ユーザーデータを第三者に提供、販売、共有することはありません。" data-en="We do not provide, sell, or share user data with any third parties."></p>
 
-  <h2>お問い合わせ</h2>
-  <p>ご質問がある場合は、<a href="https://github.com/sawasige/clipboard-mac/issues">GitHub Issues</a> までお願いします。</p>
+  <h2 data-ja="お問い合わせ" data-en="Contact"></h2>
+  <p><span data-ja="ご質問がある場合は、" data-en="If you have any questions, please reach out via "></span><a href="https://github.com/sawasige/clipboard-mac/issues">GitHub Issues</a><span data-ja=" までお願いします。" data-en="."></span></p>
+
+  <script>
+    (function () {
+      var lang = 'ja';
+      var elements = document.querySelectorAll('[data-ja]');
+
+      function applyLang(l) {
+        lang = l;
+        elements.forEach(function (el) {
+          el.textContent = el.getAttribute('data-' + lang);
+        });
+        document.documentElement.lang = lang;
+      }
+
+      window.toggleLang = function () {
+        applyLang(lang === 'ja' ? 'en' : 'ja');
+      };
+
+      applyLang((navigator.language || '').startsWith('ja') ? 'ja' : 'en');
+    })();
+  </script>
 </body>
 </html>
