@@ -10,12 +10,12 @@ struct SettingsView: View {
         TabView {
             GeneralTab(clipboardManager: clipboardManager)
                 .tabItem {
-                    Label("一般", systemImage: "gear")
+                    Label("General", systemImage: "gear")
                 }
 
             FilterTab(clipboardManager: clipboardManager)
                 .tabItem {
-                    Label("フィルタ", systemImage: "line.3.horizontal.decrease.circle")
+                    Label("Filter", systemImage: "line.3.horizontal.decrease.circle")
                 }
         }
         .formStyle(.grouped)
@@ -33,48 +33,48 @@ private struct GeneralTab: View {
 
     var body: some View {
         Form {
-            Section("履歴") {
-                Picker("最大履歴数", selection: $clipboardManager.maxHistoryCount) {
+            Section("History") {
+                Picker("Max History", selection: $clipboardManager.maxHistoryCount) {
                     ForEach(historyCountOptions, id: \.self) { count in
-                        Text("\(count)件").tag(count)
+                        Text("\(count) items").tag(count)
                     }
                 }
 
-                Picker("1アイテムの最大サイズ", selection: $clipboardManager.maxItemSizeMB) {
+                Picker("Max Item Size", selection: $clipboardManager.maxItemSizeMB) {
                     ForEach(maxSizeOptions, id: \.self) { size in
                         Text("\(size) MB").tag(size)
                     }
                 }
 
-                LabeledContent("使用容量") {
+                LabeledContent("Storage Used") {
                     Text(clipboardManager.formattedTotalSize)
                 }
 
-                LabeledContent("アイテム数") {
-                    Text("\(clipboardManager.items.count)件")
+                LabeledContent("Items") {
+                    Text("\(clipboardManager.items.count) items")
                 }
             }
 
             Section {
-                Button("すべての履歴を削除", role: .destructive) {
+                Button("Delete All History", role: .destructive) {
                     clipboardManager.removeAllItems()
                 }
             }
 
-            Section("アクセシビリティ") {
+            Section("Accessibility") {
                 AccessibilityStatusView()
             }
 
-            Section("起動") {
+            Section("Startup") {
                 LaunchAtLoginToggle()
             }
 
-            Section("ホットキー") {
+            Section("Hot Key") {
                 HotKeyRecorderRow()
             }
 
-            Section("情報") {
-                LabeledContent("バージョン") {
+            Section("About") {
+                LabeledContent("Version") {
                     Text("1.0.0")
                 }
             }
@@ -88,7 +88,7 @@ private struct LaunchAtLoginToggle: View {
     @State private var isEnabled = SMAppService.mainApp.status == .enabled
 
     var body: some View {
-        Toggle("ログイン時に起動", isOn: $isEnabled)
+        Toggle("Launch at Login", isOn: $isEnabled)
             .onChange(of: isEnabled) { _, newValue in
                 do {
                     if newValue {
@@ -108,27 +108,31 @@ private struct LaunchAtLoginToggle: View {
 private struct AccessibilityStatusView: View {
     @State private var isGranted = AXIsProcessTrusted()
     var body: some View {
-        LabeledContent("権限の状態") {
+        LabeledContent("Permission Status") {
             HStack(spacing: 6) {
                 Image(systemName: isGranted ? "checkmark.circle.fill" : "xmark.circle.fill")
                     .foregroundStyle(isGranted ? .green : .red)
-                Text(isGranted ? "許可済み" : "未許可")
+                if isGranted {
+                    Text("Granted")
+                } else {
+                    Text("Not Granted")
+                }
             }
         }
 
         if !isGranted {
-            Text("ペースト機能とカーソル位置検出にはアクセシビリティ権限が必要です。許可後、アプリの再起動が必要な場合があります。")
+            Text("Accessibility permission is required for paste and cursor detection. You may need to restart the app after granting permission.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
-            Button("システム設定を開く") {
+            Button("Open System Settings") {
                 NSWorkspace.shared.open(
                     URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!
                 )
             }
         }
 
-        Button("状態を更新") {
+        Button("Refresh Status") {
             isGranted = AXIsProcessTrusted()
         }
         .font(.caption)
@@ -154,7 +158,7 @@ private struct HotKeyRecorderRow: View {
     }
 
     var body: some View {
-        LabeledContent("ホットキー") {
+        LabeledContent("Hot Key") {
             Button {
                 if isRecording {
                     stopRecording()
@@ -162,8 +166,14 @@ private struct HotKeyRecorderRow: View {
                     startRecording()
                 }
             } label: {
-                Text(isRecording ? "キーを入力..." : displayString)
-                    .frame(minWidth: 80)
+                Group {
+                    if isRecording {
+                        Text("Press a key...")
+                    } else {
+                        Text(verbatim: displayString)
+                    }
+                }
+                .frame(minWidth: 80)
             }
             .keyboardShortcut(.none)
         }
@@ -209,8 +219,8 @@ private struct FilterTab: View {
 
     var body: some View {
         Form {
-            Section("カテゴリフィルタ") {
-                Text("無効にしたカテゴリのコピーは記録されません。")
+            Section("Category Filter") {
+                Text("Disabled categories will not be recorded.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
 

@@ -28,7 +28,7 @@ struct MenuBarView: View {
             HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass")
                     .foregroundStyle(.secondary)
-                TextField("検索...", text: $searchText)
+                TextField("Search...", text: $searchText)
                     .textFieldStyle(.plain)
                     .font(.system(size: 13))
                 if !searchText.isEmpty {
@@ -50,7 +50,7 @@ struct MenuBarView: View {
                         .foregroundStyle(clipboardManager.isPaused ? .orange : .secondary)
                 }
                 .buttonStyle(.plain)
-                .help(clipboardManager.isPaused ? "監視を再開" : "監視を一時停止")
+                .help(clipboardManager.isPaused ? Text("Resume Monitoring") : Text("Pause Monitoring"))
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
@@ -61,7 +61,7 @@ struct MenuBarView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 6) {
                     MenuFilterChip(
-                        label: "すべて",
+                        label: String(localized: "All"),
                         icon: "tray.full",
                         isSelected: selectedCategory == nil,
                         color: .accentColor
@@ -89,9 +89,13 @@ struct MenuBarView: View {
             // History list
             if filteredItems.isEmpty {
                 ContentUnavailableView {
-                    Label("履歴なし", systemImage: "clipboard")
+                    Label("No History", systemImage: "clipboard")
                 } description: {
-                    Text(searchText.isEmpty ? "コピーした内容がここに表示されます" : "検索結果が見つかりません")
+                    if searchText.isEmpty {
+                        Text("Copied content will appear here")
+                    } else {
+                        Text("No results found")
+                    }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
@@ -125,10 +129,10 @@ struct MenuBarView: View {
 
             // Footer
             HStack(spacing: 12) {
-                Text("\(clipboardManager.items.count)件")
+                Text("\(clipboardManager.items.count) items")
                     .font(.callout)
                     .foregroundStyle(.secondary)
-                Text("·")
+                Text(verbatim: "·")
                     .foregroundStyle(.quaternary)
                 Text(clipboardManager.formattedTotalSize)
                     .font(.callout)
@@ -139,7 +143,7 @@ struct MenuBarView: View {
                 FooterIconButton(icon: "trash", color: .red) {
                     clipboardManager.removeAllItems()
                 }
-                .help("全削除")
+                .help("Delete All")
 
                 SettingsLink {
                     FooterIconLabel(icon: "gearshape", color: .secondary)
@@ -148,12 +152,12 @@ struct MenuBarView: View {
                 .simultaneousGesture(TapGesture().onEnded {
                     NSApp.activate(ignoringOtherApps: true)
                 })
-                .help("設定")
+                .help("Settings")
 
                 FooterIconButton(icon: "power", color: .red) {
                     NSApplication.shared.terminate(nil)
                 }
-                .help("終了")
+                .help("Quit")
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 10)

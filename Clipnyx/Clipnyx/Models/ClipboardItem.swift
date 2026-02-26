@@ -166,7 +166,7 @@ struct ClipboardItem: Identifiable, Codable, Sendable {
             if let text = pasteboard.string(forType: .string) {
                 return String(text.prefix(500))
             }
-            return "(テキストなし)"
+            return String(localized: "(No Text)")
 
         case .richText:
             if let text = pasteboard.string(forType: .string) {
@@ -176,7 +176,7 @@ struct ClipboardItem: Identifiable, Codable, Sendable {
                let attrStr = NSAttributedString(rtf: rtfData, documentAttributes: nil) {
                 return String(attrStr.string.prefix(500))
             }
-            return "(リッチテキスト)"
+            return String(localized: "(Rich Text)")
 
         case .html:
             if let text = pasteboard.string(forType: .string) {
@@ -186,35 +186,35 @@ struct ClipboardItem: Identifiable, Codable, Sendable {
                let htmlStr = String(data: htmlData, encoding: .utf8) {
                 return String(htmlStr.prefix(500))
             }
-            return "(HTML)"
+            return String(localized: "(HTML)")
 
         case .url:
             if let text = pasteboard.string(forType: .string) {
                 return String(text.prefix(500))
             }
-            return "(URL)"
+            return String(localized: "(URL)")
 
         case .image:
             if let tiffData = pasteboard.data(forType: .tiff),
                let image = NSImage(data: tiffData) {
                 let size = image.size
-                return "画像 \(Int(size.width))×\(Int(size.height))"
+                return String(localized: "Image \(Int(size.width))×\(Int(size.height))")
             }
-            return "画像"
+            return String(localized: "Image")
 
         case .pdf:
-            return "PDF ドキュメント"
+            return String(localized: "PDF Document")
 
         case .fileURL:
             if let urls = pasteboard.readObjects(forClasses: [NSURL.self], options: nil) as? [URL] {
                 let names = urls.prefix(5).map(\.lastPathComponent)
                 let result = names.joined(separator: ", ")
                 if urls.count > 5 {
-                    return result + " 他\(urls.count - 5)件"
+                    return result + " " + String(localized: "and \(urls.count - 5) more")
                 }
                 return result
             }
-            return "(ファイル)"
+            return String(localized: "(File)")
 
         case .color:
             if let colorData = pasteboard.data(forType: .color),
@@ -229,10 +229,10 @@ struct ClipboardItem: Identifiable, Codable, Sendable {
                     )
                 }
             }
-            return "(カラー)"
+            return String(localized: "(Color)")
 
         case .other:
-            return "(データ)"
+            return String(localized: "(Data)")
         }
     }
 

@@ -17,26 +17,26 @@ struct ItemDetailView: View {
             Divider()
 
             // Details
-            LabeledContent("カテゴリ") {
+            LabeledContent("Category") {
                 Label(item.category.label, systemImage: item.category.icon)
                     .foregroundStyle(item.category.color)
             }
 
-            LabeledContent("コピー日時") {
+            LabeledContent("Copied At") {
                 Text(item.timestamp, format: .dateTime
                     .year().month().day()
                     .hour().minute().second()
                 )
             }
 
-            LabeledContent("データサイズ") {
+            LabeledContent("Data Size") {
                 Text(item.formattedDataSize)
             }
 
             Divider()
 
             // Preview
-            Text("プレビュー")
+            Text("Preview")
                 .font(.subheadline.bold())
 
             if let thumbnailData = item.thumbnailData,
@@ -60,7 +60,7 @@ struct ItemDetailView: View {
             Divider()
 
             // Data types
-            Text("データ型")
+            Text("Data Types")
                 .font(.subheadline.bold())
 
             ForEach(item.representations, id: \.typeRawValue) { rep in

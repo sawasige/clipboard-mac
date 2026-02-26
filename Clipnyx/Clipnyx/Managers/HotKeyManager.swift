@@ -46,7 +46,7 @@ final class HotKeyManager: @unchecked Sendable {
             }, 1, &eventType, nil, &eventHandlerRef)
         }
 
-        var hotKeyID = kHotKeyID
+        let hotKeyID = kHotKeyID
         RegisterEventHotKey(currentKeyCode, carbonModifiers, hotKeyID, GetApplicationEventTarget(), 0, &hotKeyRef)
     }
 

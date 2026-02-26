@@ -25,7 +25,7 @@
     <key>LSApplicationCategoryType</key>
     <string>public.app-category.utilities</string>
     <key>NSAccessibilityUsageDescription</key>
-    <string>Clipnyx はクリップボード履歴の自動ペーストとグローバルホットキーのためにアクセシビリティ権限を使用します。</string>
+    <string>Clipnyx uses accessibility permissions for automatic pasting and global hotkeys.</string>
     <key>ITSAppUsesNonExemptEncryption</key>
     <false/>
 </dict>

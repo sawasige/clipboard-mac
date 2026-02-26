@@ -30,7 +30,7 @@ struct PopupContentView: View {
             HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass")
                     .foregroundStyle(.secondary)
-                TextField("検索...", text: $searchText)
+                TextField("Search...", text: $searchText)
                     .textFieldStyle(.plain)
                     .font(.system(size: 14))
                     .focused($isSearchFocused)
@@ -54,7 +54,7 @@ struct PopupContentView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 6) {
                     FilterChip(
-                        label: "すべて",
+                        label: String(localized: "All"),
                         icon: "tray.full",
                         isSelected: selectedCategory == nil,
                         color: .accentColor
@@ -82,9 +82,13 @@ struct PopupContentView: View {
             // History list
             if filteredItems.isEmpty {
                 ContentUnavailableView {
-                    Label("履歴なし", systemImage: "clipboard")
+                    Label("No History", systemImage: "clipboard")
                 } description: {
-                    Text(searchText.isEmpty ? "コピーした内容がここに表示されます" : "検索結果が見つかりません")
+                    if searchText.isEmpty {
+                        Text("Copied content will appear here")
+                    } else {
+                        Text("No results found")
+                    }
                 }
                 .frame(height: 120)
             } else {
@@ -124,11 +128,11 @@ struct PopupContentView: View {
 
             // Footer
             HStack {
-                Text("\(filteredItems.count)件")
+                Text("\(filteredItems.count) items")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Spacer()
-                Text("Enter で貼り付け")
+                Text("Press Enter to paste")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

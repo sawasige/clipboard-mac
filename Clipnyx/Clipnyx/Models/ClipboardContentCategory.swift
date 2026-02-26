@@ -47,17 +47,17 @@ enum ClipboardContentCategory: String, Codable, CaseIterable, Sendable {
 
     var label: String {
         switch self {
-        case .plainText: return "プレーンテキスト"
-        case .richText: return "リッチテキスト"
-        case .html: return "HTML"
-        case .url: return "URL"
-        case .image: return "画像"
-        case .pdf: return "PDF"
-        case .fileURL: return "ファイル"
-        case .color: return "カラー"
-        case .sourceCode: return "ソースコード"
-        case .csv: return "CSV"
-        case .other: return "その他"
+        case .plainText: return String(localized: "Plain Text")
+        case .richText: return String(localized: "Rich Text")
+        case .html: return String(localized: "HTML")
+        case .url: return String(localized: "URL")
+        case .image: return String(localized: "Image")
+        case .pdf: return String(localized: "PDF")
+        case .fileURL: return String(localized: "File")
+        case .color: return String(localized: "Color")
+        case .sourceCode: return String(localized: "Source Code")
+        case .csv: return String(localized: "CSV")
+        case .other: return String(localized: "Other")
         }
     }
 }
