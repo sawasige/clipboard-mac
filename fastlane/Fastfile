@@ -1,0 +1,27 @@
+default_platform(:mac)
+
+platform :mac do
+  desc "Upload metadata and screenshots to App Store Connect"
+  lane :metadata do
+    deliver(
+      api_key_path: "fastlane/api_key.json",
+      skip_binary_upload: true,
+      skip_screenshots: false,
+      force: true,
+      platform: "osx",
+      precheck_include_in_app_purchases: false
+    )
+  end
+
+  desc "Upload metadata only (no screenshots)"
+  lane :metadata_only do
+    deliver(
+      api_key_path: "fastlane/api_key.json",
+      skip_binary_upload: true,
+      skip_screenshots: true,
+      force: true,
+      platform: "osx",
+      precheck_include_in_app_purchases: false
+    )
+  end
+end

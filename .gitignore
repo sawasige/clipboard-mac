@@ -16,3 +16,6 @@ build/
 
 # Claude Code
 .claude/
+
+# Fastlane
+fastlane/api_key.json
