@@ -150,7 +150,7 @@ struct MenuBarView: View {
                 })
                 .help("設定")
 
-                FooterIconButton(icon: "xmark", color: .secondary) {
+                FooterIconButton(icon: "power", color: .red) {
                     NSApplication.shared.terminate(nil)
                 }
                 .help("終了")
