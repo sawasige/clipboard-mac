@@ -1,13 +1,16 @@
 import Carbon.HIToolbox
 import AppKit
 
+private let kHotKeyID = EventHotKeyID(signature: OSType(0x434C5058), id: 1) // "CLPX"
+
 final class HotKeyManager: @unchecked Sendable {
     static let shared = HotKeyManager()
 
     private static let defaultKeyCode: UInt32 = 9 // V key
     private static let defaultModifiers: UInt = NSEvent.ModifierFlags([.command, .shift]).rawValue
 
-    private var globalMonitor: Any?
+    private var hotKeyRef: EventHotKeyRef?
+    private var eventHandlerRef: EventHandlerRef?
     var onHotKey: (() -> Void)?
 
     var currentKeyCode: UInt32 {
@@ -33,23 +36,34 @@ final class HotKeyManager: @unchecked Sendable {
     func register() {
         unregister()
 
-        let keyCode = UInt16(currentKeyCode)
-        let modifiers = NSEvent.ModifierFlags(rawValue: currentModifiers)
-            .intersection([.command, .shift, .option, .control])
+        let carbonModifiers = cocoaToCarbonModifiers(NSEvent.ModifierFlags(rawValue: currentModifiers))
 
-        globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            let eventMods = event.modifierFlags.intersection([.command, .shift, .option, .control])
-            if event.keyCode == keyCode && eventMods == modifiers {
-                self?.handleHotKey()
-            }
+        if eventHandlerRef == nil {
+            var eventType = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
+            InstallEventHandler(GetApplicationEventTarget(), { _, event, _ -> OSStatus in
+                HotKeyManager.shared.handleHotKey()
+                return noErr
+            }, 1, &eventType, nil, &eventHandlerRef)
         }
+
+        var hotKeyID = kHotKeyID
+        RegisterEventHotKey(currentKeyCode, carbonModifiers, hotKeyID, GetApplicationEventTarget(), 0, &hotKeyRef)
     }
 
     func unregister() {
-        if let monitor = globalMonitor {
-            NSEvent.removeMonitor(monitor)
-            globalMonitor = nil
+        if let ref = hotKeyRef {
+            UnregisterEventHotKey(ref)
+            hotKeyRef = nil
         }
+    }
+
+    private func cocoaToCarbonModifiers(_ flags: NSEvent.ModifierFlags) -> UInt32 {
+        var carbon: UInt32 = 0
+        if flags.contains(.command) { carbon |= UInt32(cmdKey) }
+        if flags.contains(.option) { carbon |= UInt32(optionKey) }
+        if flags.contains(.control) { carbon |= UInt32(controlKey) }
+        if flags.contains(.shift) { carbon |= UInt32(shiftKey) }
+        return carbon
     }
 
     // MARK: - Display Helpers

@@ -6,6 +6,11 @@ import Observation
 
 private class KeyablePanel: NSPanel {
     override var canBecomeKey: Bool { true }
+    var onEscape: (() -> Void)?
+
+    override func cancelOperation(_ sender: Any?) {
+        onEscape?()
+    }
 }
 
 @MainActor
@@ -36,7 +41,7 @@ final class PopupPanelController {
         }
 
         let panelWidth: CGFloat = 380
-        let panelHeight: CGFloat = 480
+        let panelHeight: CGFloat = 560
 
         let panel = KeyablePanel(
             contentRect: NSRect(x: 0, y: 0, width: panelWidth, height: panelHeight),
@@ -45,6 +50,9 @@ final class PopupPanelController {
             defer: false
         )
 
+        panel.onEscape = { [weak self] in
+            self?.close()
+        }
         panel.isFloatingPanel = true
         panel.level = .floating
         panel.titleVisibility = .hidden

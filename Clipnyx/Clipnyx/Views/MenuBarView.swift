@@ -124,48 +124,39 @@ struct MenuBarView: View {
             Divider()
 
             // Footer
-            HStack {
+            HStack(spacing: 12) {
                 Text("\(clipboardManager.items.count)件")
-                    .font(.caption)
+                    .font(.callout)
                     .foregroundStyle(.secondary)
-                Text("・")
-                    .foregroundStyle(.secondary)
+                Text("·")
+                    .foregroundStyle(.quaternary)
                 Text(clipboardManager.formattedTotalSize)
-                    .font(.caption)
+                    .font(.callout)
                     .foregroundStyle(.secondary)
 
                 Spacer()
 
-                Button("全削除") {
+                FooterIconButton(icon: "trash", color: .red) {
                     clipboardManager.removeAllItems()
                 }
-                .font(.caption)
-                .buttonStyle(.plain)
-                .foregroundStyle(.red)
-
-                Text("・")
-                    .foregroundStyle(.secondary)
+                .help("全削除")
 
                 SettingsLink {
-                    Text("設定...")
-                        .font(.caption)
+                    FooterIconLabel(icon: "gearshape", color: .secondary)
                 }
                 .buttonStyle(.plain)
                 .simultaneousGesture(TapGesture().onEnded {
                     NSApp.activate(ignoringOtherApps: true)
                 })
+                .help("設定")
 
-                Text("・")
-                    .foregroundStyle(.secondary)
-
-                Button("終了") {
+                FooterIconButton(icon: "xmark", color: .secondary) {
                     NSApplication.shared.terminate(nil)
                 }
-                .font(.caption)
-                .buttonStyle(.plain)
+                .help("終了")
             }
             .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.vertical, 10)
         }
         .frame(width: 360)
         .popover(item: $detailItem) { item in
@@ -279,5 +270,37 @@ private struct MenuItemRow: View {
         .onTapGesture {
             onSelect()
         }
+    }
+}
+
+private struct FooterIconButton: View {
+    let icon: String
+    let color: Color
+    let action: () -> Void
+
+    @State private var isHovered = false
+
+    var body: some View {
+        Button(action: action) {
+            FooterIconLabel(icon: icon, color: color)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+private struct FooterIconLabel: View {
+    let icon: String
+    let color: Color
+
+    @State private var isHovered = false
+
+    var body: some View {
+        Image(systemName: icon)
+            .font(.system(size: 13))
+            .foregroundStyle(isHovered ? color : .secondary)
+            .frame(width: 26, height: 26)
+            .background(isHovered ? color.opacity(0.1) : .clear)
+            .clipShape(RoundedRectangle(cornerRadius: 5))
+            .onHover { isHovered = $0 }
     }
 }

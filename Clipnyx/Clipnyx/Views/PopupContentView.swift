@@ -8,6 +8,7 @@ struct PopupContentView: View {
     @State private var searchText = ""
     @State private var selectedIndex = 0
     @State private var selectedCategory: ClipboardContentCategory?
+    @State private var listContentHeight: CGFloat = 0
     @FocusState private var isSearchFocused: Bool
 
     private var filteredItems: [ClipboardItem] {
@@ -85,7 +86,7 @@ struct PopupContentView: View {
                 } description: {
                     Text(searchText.isEmpty ? "コピーした内容がここに表示されます" : "検索結果が見つかりません")
                 }
-                .frame(maxHeight: .infinity)
+                .frame(height: 120)
             } else {
                 ScrollViewReader { proxy in
                     ScrollView {
@@ -103,7 +104,12 @@ struct PopupContentView: View {
                             }
                         }
                         .padding(.vertical, 4)
+                        .background(GeometryReader { geo in
+                            Color.clear.preference(key: ListContentHeightKey.self, value: geo.size.height)
+                        })
                     }
+                    .frame(height: min(listContentHeight, 450))
+                    .onPreferenceChange(ListContentHeightKey.self) { listContentHeight = $0 }
                     .onChange(of: selectedIndex) { _, newValue in
                         if let item = filteredItems[safe: newValue] {
                             withAnimation(.easeOut(duration: 0.1)) {
@@ -137,7 +143,8 @@ struct PopupContentView: View {
         .onKeyPress(characters: .decimalDigits) { press in
             handleNumberKey(press)
         }
-        .onAppear {
+        .task {
+            try? await Task.sleep(for: .milliseconds(100))
             isSearchFocused = true
         }
         .onChange(of: searchText) { _, _ in
@@ -275,5 +282,12 @@ private struct PopupItemRow: View {
         .background(isSelected ? Color.accentColor.opacity(0.15) : Color.clear)
         .clipShape(RoundedRectangle(cornerRadius: 6))
         .contentShape(Rectangle())
+    }
+}
+
+private struct ListContentHeightKey: PreferenceKey {
+    nonisolated(unsafe) static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = max(value, nextValue())
     }
 }
