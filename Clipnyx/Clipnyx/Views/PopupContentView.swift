@@ -7,6 +7,7 @@ struct PopupContentView: View {
 
     @State private var searchText = ""
     @State private var selectedIndex = 0
+    @State private var hoveredIndex: Int?
     @State private var selectedCategory: ClipboardContentCategory?
     @State private var listContentHeight: CGFloat = 0
     @FocusState private var isSearchFocused: Bool
@@ -99,11 +100,19 @@ struct PopupContentView: View {
                                 PopupItemRow(
                                     item: item,
                                     index: index,
-                                    isSelected: index == selectedIndex
+                                    isSelected: index == selectedIndex,
+                                    isHovered: index == hoveredIndex
                                 )
                                 .id(item.id)
+                                .onHover { hovering in
+                                    hoveredIndex = hovering ? index : nil
+                                }
                                 .onTapGesture {
-                                    selectAndPaste(item: item)
+                                    selectedIndex = index
+                                    hoveredIndex = nil
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
+                                        selectAndPaste(item: item)
+                                    }
                                 }
                             }
                         }
@@ -262,6 +271,7 @@ private struct PopupItemRow: View {
     let item: ClipboardItem
     let index: Int
     let isSelected: Bool
+    let isHovered: Bool
 
     var body: some View {
         HStack(spacing: 8) {
@@ -304,7 +314,7 @@ private struct PopupItemRow: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
-        .background(isSelected ? Color.accentColor.opacity(0.15) : Color.clear)
+        .background(isSelected ? Color.accentColor.opacity(0.15) : isHovered ? Color.primary.opacity(0.06) : Color.clear)
         .clipShape(RoundedRectangle(cornerRadius: 6))
         .contentShape(Rectangle())
     }
