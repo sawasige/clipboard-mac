@@ -122,7 +122,9 @@ struct PopupContentView: View {
                         })
                     }
                     .frame(height: min(listContentHeight, 450))
-                    .onPreferenceChange(ListContentHeightKey.self) { listContentHeight = $0 }
+                    .onPreferenceChange(ListContentHeightKey.self) { newHeight in
+                        DispatchQueue.main.async { listContentHeight = newHeight }
+                    }
                     .onChange(of: selectedIndex) { _, newValue in
                         if let item = filteredItems[safe: newValue] {
                             withAnimation(.easeOut(duration: 0.1)) {
