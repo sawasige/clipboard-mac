@@ -1,5 +1,4 @@
 import AppKit
-import CryptoKit
 
 final class ClipboardStore: Sendable {
     private let writeQueue = DispatchQueue(label: "com.clipnyx.store.write", qos: .utility)
@@ -9,20 +8,12 @@ final class ClipboardStore: Sendable {
         return appSupport.appendingPathComponent("Clipnyx", isDirectory: true)
     }()
 
-    private static let v2URL: URL = {
-        baseURL.appendingPathComponent("v2", isDirectory: true)
-    }()
-
     private static let indexURL: URL = {
-        v2URL.appendingPathComponent("index.json")
+        baseURL.appendingPathComponent("index.json")
     }()
 
     private static let blobsURL: URL = {
-        v2URL.appendingPathComponent("blobs", isDirectory: true)
-    }()
-
-    private static let legacyHistoryURL: URL = {
-        baseURL.appendingPathComponent("history.json")
+        baseURL.appendingPathComponent("blobs", isDirectory: true)
     }()
 
     // MARK: - Index Codable Types
@@ -65,7 +56,7 @@ final class ClipboardStore: Sendable {
         }
         writeQueue.async {
             do {
-                try FileManager.default.createDirectory(at: Self.v2URL, withIntermediateDirectories: true)
+                try FileManager.default.createDirectory(at: Self.baseURL, withIntermediateDirectories: true)
                 let data = try JSONEncoder().encode(entries)
                 try data.write(to: Self.indexURL, options: .atomic)
             } catch {
@@ -177,95 +168,9 @@ final class ClipboardStore: Sendable {
 
     func deleteAll() {
         writeQueue.async {
-            try? FileManager.default.removeItem(at: Self.v2URL)
-        }
-    }
-
-    // MARK: - Migration
-
-    func migrateFromLegacyIfNeeded() {
-        let fm = FileManager.default
-        guard fm.fileExists(atPath: Self.legacyHistoryURL.path) else { return }
-
-        // Don't migrate if v2 index already exists
-        guard !fm.fileExists(atPath: Self.indexURL.path) else {
-            try? fm.removeItem(at: Self.legacyHistoryURL)
-            return
-        }
-
-        // Legacy item format (mirrors old ClipboardItem)
-        struct LegacyItem: Codable {
-            let id: UUID
-            let timestamp: Date
-            let category: ClipboardContentCategory
-            let representations: [PasteboardRepresentation]
-            let previewText: String
-            let thumbnailData: Data?
-        }
-
-        do {
-            let data = try Data(contentsOf: Self.legacyHistoryURL)
-            let legacyItems = try JSONDecoder().decode([LegacyItem].self, from: data)
-
-            // Create v2 directory structure
-            try fm.createDirectory(at: Self.blobsURL, withIntermediateDirectories: true)
-
-            // Convert and write each item
-            var indexEntries: [IndexEntry] = []
-
-            for legacyItem in legacyItems {
-                let blobDir = Self.blobsURL.appendingPathComponent(legacyItem.id.uuidString, isDirectory: true)
-                try fm.createDirectory(at: blobDir, withIntermediateDirectories: true)
-
-                // Write representation data
-                for (index, rep) in legacyItem.representations.enumerated() {
-                    try rep.data.write(to: blobDir.appendingPathComponent("rep-\(index).dat"))
-                }
-
-                // Write thumbnail
-                if let thumb = legacyItem.thumbnailData {
-                    try thumb.write(to: blobDir.appendingPathComponent("thumb.dat"))
-                }
-
-                // Write meta.json
-                let meta = BlobMeta(
-                    types: legacyItem.representations.map(\.typeRawValue),
-                    sizes: legacyItem.representations.map(\.data.count)
-                )
-                try JSONEncoder().encode(meta).write(to: blobDir.appendingPathComponent("meta.json"))
-
-                // Compute content hash
-                var hasher = SHA256()
-                for rep in legacyItem.representations {
-                    hasher.update(data: rep.data)
-                }
-                let contentHash = Data(hasher.finalize())
-
-                let entry = IndexEntry(
-                    id: legacyItem.id,
-                    timestamp: legacyItem.timestamp,
-                    category: legacyItem.category,
-                    previewText: legacyItem.previewText,
-                    hasThumbnail: legacyItem.thumbnailData != nil,
-                    totalDataSize: legacyItem.representations.reduce(0) { $0 + $1.data.count },
-                    contentHash: contentHash,
-                    representationInfos: legacyItem.representations.map {
-                        RepInfoEntry(type: $0.typeRawValue, size: $0.data.count)
-                    }
-                )
-                indexEntries.append(entry)
-            }
-
-            // Write index.json
-            let indexData = try JSONEncoder().encode(indexEntries)
-            try indexData.write(to: Self.indexURL, options: .atomic)
-
-            // Remove legacy file
-            try fm.removeItem(at: Self.legacyHistoryURL)
-
-            print("Migration complete: \(legacyItems.count) items migrated to v2")
-        } catch {
-            print("Migration failed: \(error)")
+            let fm = FileManager.default
+            try? fm.removeItem(at: Self.indexURL)
+            try? fm.removeItem(at: Self.blobsURL)
         }
     }
 

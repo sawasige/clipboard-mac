@@ -31,7 +31,6 @@ final class ClipboardManager: @unchecked Sendable {
         } else {
             excludedCategories = []
         }
-        store.migrateFromLegacyIfNeeded()
         items = store.loadIndex()
         store.cleanupOrphans(validIDs: Set(items.map(\.id)))
         lastChangeCount = NSPasteboard.general.changeCount
