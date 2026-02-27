@@ -83,6 +83,16 @@
         }
       }
     },
+    "%lld GB" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld GB"
+          }
+        }
+      }
+    },
     "%lld items" : {
       "localizations" : {
         "ja" : {
@@ -395,12 +405,12 @@
         }
       }
     },
-    "Max Item Size" : {
+    "Max Storage" : {
       "localizations" : {
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1アイテムの最大サイズ"
+            "value" : "最大容量"
           }
         }
       }

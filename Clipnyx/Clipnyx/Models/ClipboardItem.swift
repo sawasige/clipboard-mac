@@ -17,14 +17,13 @@ struct ClipboardItem: Identifiable, Sendable {
     let contentHash: Data
     let representationInfos: [RepresentationInfo]
 
+    private static let maxCaptureSize: Int = 500 * 1024 * 1024 // 500MB safety cap
     private static let maxThumbnailDimension: CGFloat = 200.0
 
     // MARK: - Capture from NSPasteboard
 
-    static func capture(from pasteboard: NSPasteboard, maxSizeMB: Int) -> (item: ClipboardItem, representations: [PasteboardRepresentation])? {
+    static func capture(from pasteboard: NSPasteboard) -> (item: ClipboardItem, representations: [PasteboardRepresentation])? {
         guard let types = pasteboard.types, !types.isEmpty else { return nil }
-
-        let maxTotalSize = maxSizeMB * 1024 * 1024
 
         // Collect all representations
         var reps: [PasteboardRepresentation] = []
@@ -32,7 +31,7 @@ struct ClipboardItem: Identifiable, Sendable {
         for type in types {
             guard let data = pasteboard.data(forType: type) else { continue }
             totalSize += data.count
-            if totalSize > maxTotalSize { break }
+            if totalSize > maxCaptureSize { break }
             reps.append(PasteboardRepresentation(type: type, data: data))
         }
         guard !reps.isEmpty else { return nil }

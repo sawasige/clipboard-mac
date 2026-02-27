@@ -29,7 +29,7 @@ private struct GeneralTab: View {
     @Bindable var clipboardManager: ClipboardManager
 
     private let historyCountOptions = [20, 50, 100, 200, 500]
-    private let maxSizeOptions = [10, 25, 50, 100]
+    private let totalSizeOptions = [256, 512, 1024, 2048, 5120]
 
     var body: some View {
         Form {
@@ -40,9 +40,13 @@ private struct GeneralTab: View {
                     }
                 }
 
-                Picker("Max Item Size", selection: $clipboardManager.maxItemSizeMB) {
-                    ForEach(maxSizeOptions, id: \.self) { size in
-                        Text("\(size) MB").tag(size)
+                Picker("Max Storage", selection: $clipboardManager.maxTotalSizeMB) {
+                    ForEach(totalSizeOptions, id: \.self) { size in
+                        if size >= 1024 {
+                            Text("\(size / 1024) GB").tag(size)
+                        } else {
+                            Text("\(size) MB").tag(size)
+                        }
                     }
                 }
 

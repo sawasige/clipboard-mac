@@ -10,8 +10,8 @@ final class ClipboardManager: @unchecked Sendable {
         didSet { UserDefaults.standard.set(maxHistoryCount, forKey: "maxHistoryCount") }
     }
 
-    var maxItemSizeMB: Int {
-        didSet { UserDefaults.standard.set(maxItemSizeMB, forKey: "maxItemSizeMB") }
+    var maxTotalSizeMB: Int {
+        didSet { UserDefaults.standard.set(maxTotalSizeMB, forKey: "maxTotalSizeMB") }
     }
 
     var excludedCategories: Set<ClipboardContentCategory> {
@@ -25,7 +25,7 @@ final class ClipboardManager: @unchecked Sendable {
 
     init() {
         maxHistoryCount = UserDefaults.standard.object(forKey: "maxHistoryCount") as? Int ?? 50
-        maxItemSizeMB = UserDefaults.standard.object(forKey: "maxItemSizeMB") as? Int ?? 50
+        maxTotalSizeMB = UserDefaults.standard.object(forKey: "maxTotalSizeMB") as? Int ?? 1024
         if let raw = UserDefaults.standard.stringArray(forKey: "excludedCategories") {
             excludedCategories = Set(raw.compactMap { ClipboardContentCategory(rawValue: $0) })
         } else {
@@ -63,7 +63,7 @@ final class ClipboardManager: @unchecked Sendable {
         guard currentCount != lastChangeCount else { return }
         lastChangeCount = currentCount
 
-        guard let (newItem, representations) = ClipboardItem.capture(from: pasteboard, maxSizeMB: maxItemSizeMB) else { return }
+        guard let (newItem, representations) = ClipboardItem.capture(from: pasteboard) else { return }
 
         // Check excluded categories
         guard !excludedCategories.contains(newItem.category) else { return }
@@ -88,6 +88,12 @@ final class ClipboardManager: @unchecked Sendable {
         if items.count > maxHistoryCount {
             removedIDs += items.suffix(from: maxHistoryCount).map(\.id)
             items = Array(items.prefix(maxHistoryCount))
+        }
+
+        // Enforce total size limit
+        let maxBytes = maxTotalSizeMB * 1024 * 1024
+        while items.count > 1, totalDataSize > maxBytes {
+            removedIDs.append(items.removeLast().id)
         }
 
         // Save blobs first, then index
