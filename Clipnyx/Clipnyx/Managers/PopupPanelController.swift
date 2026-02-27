@@ -64,33 +64,6 @@ final class PopupPanelController {
         panel.hidesOnDeactivate = false
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
 
-        // Position at text cursor, fallback to mouse
-        let anchorPoint = Self.textCursorPosition() ?? NSEvent.mouseLocation
-        var panelOrigin = NSPoint(
-            x: anchorPoint.x,
-            y: anchorPoint.y - panelHeight
-        )
-
-        // Screen edge correction
-        if let screen = NSScreen.screens.first(where: { $0.frame.contains(anchorPoint) }) ?? NSScreen.main {
-            let visibleFrame = screen.visibleFrame
-
-            if panelOrigin.x < visibleFrame.minX {
-                panelOrigin.x = visibleFrame.minX
-            }
-            if panelOrigin.x + panelWidth > visibleFrame.maxX {
-                panelOrigin.x = visibleFrame.maxX - panelWidth
-            }
-            if panelOrigin.y < visibleFrame.minY {
-                panelOrigin.y = visibleFrame.minY
-            }
-            if panelOrigin.y + panelHeight > visibleFrame.maxY {
-                panelOrigin.y = visibleFrame.maxY - panelHeight
-            }
-        }
-
-        panel.setFrameOrigin(panelOrigin)
-
         let contentView = PopupContentView(
             clipboardManager: clipboardManager,
             onDismiss: { [weak self] in
@@ -100,29 +73,17 @@ final class PopupPanelController {
                 self?.closeAndPaste()
             }
         )
-
         panel.contentView = NSHostingView(rootView: contentView)
 
-        panel.makeKeyAndOrderFront(nil)
         self.panel = panel
         self.isVisible = true
 
-        // パネル外クリックで閉じる
-        clickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
-            self?.close()
-        }
-
-        // ⌘Tab 等で他のアプリがアクティブになったら閉じる
-        appDeactivationObserver = NSWorkspace.shared.notificationCenter.addObserver(
-            forName: NSWorkspace.didActivateApplicationNotification,
-            object: nil, queue: .main
-        ) { [weak self] notification in
-            guard let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication,
-                  app.bundleIdentifier != Bundle.main.bundleIdentifier else { return }
-            MainActor.assumeIsolated {
-                self?.close()
-            }
-        }
+        let mousePoint = NSEvent.mouseLocation
+        let panelOrigin = Self.panelOrigin(anchor: mousePoint, panelWidth: panelWidth, panelHeight: panelHeight)
+        panel.setFrameOrigin(panelOrigin)
+        panel.makeKeyAndOrderFront(nil)
+        setupClickMonitor()
+        setupDeactivationObserver()
     }
 
     func close() {
@@ -217,46 +178,41 @@ final class PopupPanelController {
         }
     }
 
-    // MARK: - Text Cursor Position via Accessibility API
+    // MARK: - Panel Positioning
 
-    private static func textCursorPosition() -> NSPoint? {
-        guard let frontApp = NSWorkspace.shared.frontmostApplication else { return nil }
-        let appElement = AXUIElementCreateApplication(frontApp.processIdentifier)
+    private static func panelOrigin(anchor: NSPoint, panelWidth: CGFloat, panelHeight: CGFloat) -> NSPoint {
+        var origin = NSPoint(x: anchor.x, y: anchor.y - panelHeight)
 
-        var focusedElement: CFTypeRef?
-        guard AXUIElementCopyAttributeValue(appElement, kAXFocusedUIElementAttribute as CFString, &focusedElement) == .success else {
-            return nil
+        if let screen = NSScreen.screens.first(where: { $0.frame.contains(anchor) }) ?? NSScreen.main {
+            let visibleFrame = screen.visibleFrame
+            if origin.x < visibleFrame.minX { origin.x = visibleFrame.minX }
+            if origin.x + panelWidth > visibleFrame.maxX { origin.x = visibleFrame.maxX - panelWidth }
+            if origin.y < visibleFrame.minY { origin.y = visibleFrame.minY }
+            if origin.y + panelHeight > visibleFrame.maxY { origin.y = visibleFrame.maxY - panelHeight }
         }
 
-        let element = focusedElement as! AXUIElement
-
-        // Get selected text range
-        var selectedRangeValue: CFTypeRef?
-        guard AXUIElementCopyAttributeValue(element, kAXSelectedTextRangeAttribute as CFString, &selectedRangeValue) == .success else {
-            return nil
-        }
-
-        // Get bounds of the selected text range
-        var boundsValue: CFTypeRef?
-        guard AXUIElementCopyParameterizedAttributeValue(
-            element,
-            kAXBoundsForRangeParameterizedAttribute as CFString,
-            selectedRangeValue!,
-            &boundsValue
-        ) == .success else {
-            return nil
-        }
-
-        var rect = CGRect.zero
-        guard AXValueGetValue(boundsValue as! AXValue, .cgRect, &rect) else {
-            return nil
-        }
-
-        // AX coordinates: top-left origin → convert to AppKit bottom-left origin
-        guard let screenHeight = NSScreen.main?.frame.height else { return nil }
-        let x = rect.origin.x
-        let y = screenHeight - rect.origin.y - rect.height
-
-        return NSPoint(x: x, y: y)
+        return origin
     }
+
+    private func setupClickMonitor() {
+        guard clickMonitor == nil else { return }
+        clickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
+            self?.close()
+        }
+    }
+
+    private func setupDeactivationObserver() {
+        guard appDeactivationObserver == nil else { return }
+        appDeactivationObserver = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didActivateApplicationNotification,
+            object: nil, queue: .main
+        ) { [weak self] notification in
+            guard let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication,
+                  app.bundleIdentifier != Bundle.main.bundleIdentifier else { return }
+            MainActor.assumeIsolated {
+                self?.close()
+            }
+        }
+    }
+
 }
