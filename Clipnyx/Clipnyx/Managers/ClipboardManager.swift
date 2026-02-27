@@ -63,7 +63,7 @@ final class ClipboardManager: @unchecked Sendable {
         guard currentCount != lastChangeCount else { return }
         lastChangeCount = currentCount
 
-        guard let (newItem, representations) = ClipboardItem.capture(from: pasteboard) else { return }
+        guard let (newItem, representations) = ClipboardItem.capture(from: pasteboard, maxSizeMB: maxItemSizeMB) else { return }
 
         // Check excluded categories
         guard !excludedCategories.contains(newItem.category) else { return }
