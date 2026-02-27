@@ -111,8 +111,8 @@ final class PopupPanelController {
     }
 
     private func performPaste(targetPID: pid_t, attempt: Int) {
-        let maxAttempts = 8
-        let delay = 0.1
+        let maxAttempts = 10
+        let delay = 0.05
 
         DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
             let frontPID = NSWorkspace.shared.frontmostApplication?.processIdentifier
@@ -122,46 +122,11 @@ final class PopupPanelController {
                 return
             }
 
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                Self.tryPaste(targetPID: targetPID)
-            }
+            Self.tryPaste(targetPID: targetPID)
         }
     }
 
     private static func tryPaste(targetPID: pid_t) {
-        // AX API でフォーカス要素にテキストを直接挿入
-        let systemWide = AXUIElementCreateSystemWide()
-        var focusedRef: CFTypeRef?
-        let focusErr = AXUIElementCopyAttributeValue(
-            systemWide, kAXFocusedUIElementAttribute as CFString, &focusedRef
-        )
-
-        let appElement = AXUIElementCreateApplication(targetPID)
-        var appFocusedRef: CFTypeRef?
-        let appFocusErr = AXUIElementCopyAttributeValue(
-            appElement, kAXFocusedUIElementAttribute as CFString, &appFocusedRef
-        )
-
-        let element: AXUIElement? = if focusErr == .success, let ref = focusedRef {
-            (ref as! AXUIElement)
-        } else if appFocusErr == .success, let ref = appFocusedRef {
-            (ref as! AXUIElement)
-        } else {
-            nil
-        }
-
-        if let element, let text = NSPasteboard.general.string(forType: .string) {
-            var isSettable: DarwinBoolean = false
-            AXUIElementIsAttributeSettable(element, kAXSelectedTextAttribute as CFString, &isSettable)
-            if isSettable.boolValue {
-                let setErr = AXUIElementSetAttributeValue(
-                    element, kAXSelectedTextAttribute as CFString, text as CFTypeRef
-                )
-                if setErr == .success { return }
-            }
-        }
-
-        // フォールバック: CGEvent ⌘V
         postPasteEvent()
     }
 
