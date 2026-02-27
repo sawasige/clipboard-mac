@@ -52,6 +52,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if let settingsWindow {
             settingsWindow.orderFrontRegardless()
             NSApp.activate(ignoringOtherApps: true)
+            settingsWindow.makeKey()
             return
         }
 
@@ -74,6 +75,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         window.orderFrontRegardless()
         NSApp.activate(ignoringOtherApps: true)
+        window.makeKey()
     }
 }
 
