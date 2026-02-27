@@ -63,13 +63,13 @@ struct ItemDetailView: View {
             Text("Data Types")
                 .font(.subheadline.bold())
 
-            ForEach(item.representations, id: \.typeRawValue) { rep in
+            ForEach(item.representationInfos, id: \.type) { info in
                 HStack {
-                    Text(rep.typeRawValue)
+                    Text(info.type)
                         .font(.system(size: 11, design: .monospaced))
                         .textSelection(.enabled)
                     Spacer()
-                    Text(formatBytes(rep.data.count))
+                    Text(formatBytes(info.size))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }

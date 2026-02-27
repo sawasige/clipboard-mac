@@ -1,20 +1,28 @@
 import AppKit
+import CryptoKit
 import UniformTypeIdentifiers
 
-struct ClipboardItem: Identifiable, Codable, Sendable {
+struct RepresentationInfo: Sendable, Equatable {
+    let type: String
+    let size: Int
+}
+
+struct ClipboardItem: Identifiable, Sendable {
     let id: UUID
     let timestamp: Date
     let category: ClipboardContentCategory
-    let representations: [PasteboardRepresentation]
     let previewText: String
     let thumbnailData: Data?
+    let totalDataSize: Int
+    let contentHash: Data
+    let representationInfos: [RepresentationInfo]
 
     private static let maxTotalSize: Int = 50 * 1024 * 1024 // 50MB
     private static let maxThumbnailDimension: CGFloat = 200.0
 
-    // MARK: - Init from NSPasteboard
+    // MARK: - Capture from NSPasteboard
 
-    init?(from pasteboard: NSPasteboard) {
+    static func capture(from pasteboard: NSPasteboard) -> (item: ClipboardItem, representations: [PasteboardRepresentation])? {
         guard let types = pasteboard.types, !types.isEmpty else { return nil }
 
         // Collect all representations
@@ -23,31 +31,47 @@ struct ClipboardItem: Identifiable, Codable, Sendable {
         for type in types {
             guard let data = pasteboard.data(forType: type) else { continue }
             totalSize += data.count
-            if totalSize > Self.maxTotalSize { break }
+            if totalSize > maxTotalSize { break }
             reps.append(PasteboardRepresentation(type: type, data: data))
         }
         guard !reps.isEmpty else { return nil }
 
-        self.id = UUID()
-        self.timestamp = Date()
-        self.representations = reps
-
         // Determine category with priority
         let typeSet = Set(types.map(\.rawValue))
-        self.category = Self.classifyCategory(types: typeSet, pasteboard: pasteboard)
+        let category = classifyCategory(types: typeSet, pasteboard: pasteboard)
 
         // Generate preview text
-        self.previewText = Self.generatePreviewText(
-            category: self.category,
+        let previewText = generatePreviewText(
+            category: category,
             pasteboard: pasteboard,
             types: typeSet
         )
 
         // Generate thumbnail for images/PDFs
-        self.thumbnailData = Self.generateThumbnail(
-            category: self.category,
+        let thumbnailData = generateThumbnail(
+            category: category,
             pasteboard: pasteboard
         )
+
+        // Compute content hash (SHA256 of all representation data)
+        var hasher = SHA256()
+        for rep in reps {
+            hasher.update(data: rep.data)
+        }
+        let contentHash = Data(hasher.finalize())
+
+        let item = ClipboardItem(
+            id: UUID(),
+            timestamp: Date(),
+            category: category,
+            previewText: previewText,
+            thumbnailData: thumbnailData,
+            totalDataSize: reps.reduce(0) { $0 + $1.data.count },
+            contentHash: contentHash,
+            representationInfos: reps.map { RepresentationInfo(type: $0.typeRawValue, size: $0.data.count) }
+        )
+
+        return (item, reps)
     }
 
     // MARK: - Category Classification (11-level priority)
@@ -292,51 +316,13 @@ struct ClipboardItem: Identifiable, Codable, Sendable {
         return bitmapRep.representation(using: .png, properties: [:])
     }
 
-    // MARK: - Restore to Pasteboard
-
-    func restoreToPasteboard() {
-        let pasteboard = NSPasteboard.general
-        pasteboard.clearContents()
-        let types = representations.map(\.pasteboardType)
-        pasteboard.declareTypes(types, owner: nil)
-        for rep in representations {
-            pasteboard.setData(rep.data, forType: rep.pasteboardType)
-        }
-    }
-
     // MARK: - Content Comparison
 
     func hasSameContent(as other: ClipboardItem) -> Bool {
-        guard category == other.category else { return false }
-
-        switch category {
-        case .plainText, .sourceCode, .csv, .url, .html, .richText:
-            return previewText == other.previewText
-
-        case .image:
-            // Compare first representation data
-            guard let selfData = representations.first?.data,
-                  let otherData = other.representations.first?.data else { return false }
-            return selfData == otherData
-
-        case .fileURL:
-            return previewText == other.previewText
-
-        case .pdf:
-            guard let selfData = representations.first(where: { $0.typeRawValue == NSPasteboard.PasteboardType.pdf.rawValue })?.data,
-                  let otherData = other.representations.first(where: { $0.typeRawValue == NSPasteboard.PasteboardType.pdf.rawValue })?.data else { return false }
-            return selfData == otherData
-
-        case .color, .other:
-            return previewText == other.previewText
-        }
+        contentHash == other.contentHash
     }
 
     // MARK: - Formatted Data Size
-
-    var totalDataSize: Int {
-        representations.reduce(0) { $0 + $1.data.count }
-    }
 
     var formattedDataSize: String {
         let bytes = totalDataSize

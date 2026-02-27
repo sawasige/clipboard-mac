@@ -5,25 +5,35 @@ import Observation
 final class ClipboardManager: @unchecked Sendable {
     var items: [ClipboardItem] = []
     var isPaused: Bool = false
-    var maxHistoryCount: Int = 50
-    var maxItemSizeMB: Int = 50
-    var excludedCategories: Set<ClipboardContentCategory> = []
+
+    var maxHistoryCount: Int {
+        didSet { UserDefaults.standard.set(maxHistoryCount, forKey: "maxHistoryCount") }
+    }
+
+    var maxItemSizeMB: Int {
+        didSet { UserDefaults.standard.set(maxItemSizeMB, forKey: "maxItemSizeMB") }
+    }
+
+    var excludedCategories: Set<ClipboardContentCategory> {
+        didSet { UserDefaults.standard.set(excludedCategories.map(\.rawValue), forKey: "excludedCategories") }
+    }
 
     private(set) var isRestoringItem: Bool = false
     private var lastChangeCount: Int = 0
     private var pollingTimer: Timer?
-
-    private static let historyDirectoryURL: URL = {
-        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        return appSupport.appendingPathComponent("Clipnyx", isDirectory: true)
-    }()
-
-    private static let historyFileURL: URL = {
-        historyDirectoryURL.appendingPathComponent("history.json")
-    }()
+    private let store = ClipboardStore()
 
     init() {
-        loadHistory()
+        maxHistoryCount = UserDefaults.standard.object(forKey: "maxHistoryCount") as? Int ?? 50
+        maxItemSizeMB = UserDefaults.standard.object(forKey: "maxItemSizeMB") as? Int ?? 50
+        if let raw = UserDefaults.standard.stringArray(forKey: "excludedCategories") {
+            excludedCategories = Set(raw.compactMap { ClipboardContentCategory(rawValue: $0) })
+        } else {
+            excludedCategories = []
+        }
+        store.migrateFromLegacyIfNeeded()
+        items = store.loadIndex()
+        store.cleanupOrphans(validIDs: Set(items.map(\.id)))
         lastChangeCount = NSPasteboard.general.changeCount
         startPolling()
     }
@@ -54,78 +64,79 @@ final class ClipboardManager: @unchecked Sendable {
         guard currentCount != lastChangeCount else { return }
         lastChangeCount = currentCount
 
-        guard let newItem = ClipboardItem(from: pasteboard) else { return }
+        guard let (newItem, representations) = ClipboardItem.capture(from: pasteboard) else { return }
 
         // Check excluded categories
         guard !excludedCategories.contains(newItem.category) else { return }
 
-        addItem(newItem)
+        addItem(newItem, representations: representations)
     }
 
     // MARK: - Item Management
 
-    private func addItem(_ newItem: ClipboardItem) {
-        // Remove duplicate
+    private func addItem(_ newItem: ClipboardItem, representations: [PasteboardRepresentation]) {
+        // Collect duplicate IDs for blob cleanup
+        let duplicateIDs = items.filter { $0.hasSameContent(as: newItem) }.map(\.id)
+
+        // Remove duplicates
         items.removeAll { $0.hasSameContent(as: newItem) }
 
         // Insert at front
         items.insert(newItem, at: 0)
 
         // Enforce count limit
+        var removedIDs = duplicateIDs
         if items.count > maxHistoryCount {
+            removedIDs += items.suffix(from: maxHistoryCount).map(\.id)
             items = Array(items.prefix(maxHistoryCount))
         }
 
-        saveHistory()
+        // Save blobs first, then index
+        store.saveBlobs(for: newItem.id, representations: representations, thumbnail: newItem.thumbnailData)
+        store.saveIndex(items)
+        if !removedIDs.isEmpty {
+            store.deleteBlobs(for: removedIDs)
+        }
     }
 
     func removeItem(_ item: ClipboardItem) {
         items.removeAll { $0.id == item.id }
-        saveHistory()
+        store.saveIndex(items)
+        store.deleteBlobs(for: [item.id])
     }
 
     func removeAllItems() {
         items.removeAll()
-        saveHistory()
+        store.deleteAll()
     }
 
     func restoreToClipboard(_ item: ClipboardItem) {
         isRestoringItem = true
-        item.restoreToPasteboard()
+
+        // Load representations from disk and restore to pasteboard
+        if let reps = store.loadRepresentations(for: item.id) {
+            let pasteboard = NSPasteboard.general
+            pasteboard.clearContents()
+            let types = reps.map(\.pasteboardType)
+            pasteboard.declareTypes(types, owner: nil)
+            for rep in reps {
+                pasteboard.setData(rep.data, forType: rep.pasteboardType)
+            }
+        }
         lastChangeCount = NSPasteboard.general.changeCount
 
-        // Move item to front
-        if let index = items.firstIndex(where: { $0.id == item.id }) {
-            let moved = items.remove(at: index)
-            items.insert(moved, at: 0)
-            saveHistory()
+        // 並べ替えと保存は非同期（パネル閉じをブロックしない）
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            if let index = self.items.firstIndex(where: { $0.id == item.id }) {
+                let moved = self.items.remove(at: index)
+                self.items.insert(moved, at: 0)
+            }
+            self.store.saveIndex(self.items)
         }
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
             self?.isRestoringItem = false
-        }
-    }
-
-    // MARK: - Persistence
-
-    private func saveHistory() {
-        let dirURL = Self.historyDirectoryURL
-        do {
-            try FileManager.default.createDirectory(at: dirURL, withIntermediateDirectories: true)
-            let data = try JSONEncoder().encode(items)
-            try data.write(to: Self.historyFileURL, options: .atomic)
-        } catch {
-            print("Failed to save history: \(error)")
-        }
-    }
-
-    private func loadHistory() {
-        guard FileManager.default.fileExists(atPath: Self.historyFileURL.path) else { return }
-        do {
-            let data = try Data(contentsOf: Self.historyFileURL)
-            items = try JSONDecoder().decode([ClipboardItem].self, from: data)
-        } catch {
-            print("Failed to load history: \(error)")
         }
     }
 
