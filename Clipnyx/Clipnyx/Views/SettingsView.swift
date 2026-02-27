@@ -34,7 +34,7 @@ private struct GeneralTab: View {
     var body: some View {
         Form {
             Section("History") {
-                Picker("Max History", selection: $clipboardManager.maxHistoryCount) {
+                Picker("Max Items", selection: $clipboardManager.maxHistoryCount) {
                     ForEach(historyCountOptions, id: \.self) { count in
                         Text("\(count) items").tag(count)
                     }
@@ -50,12 +50,12 @@ private struct GeneralTab: View {
                     }
                 }
 
-                LabeledContent("Storage Used") {
-                    Text(clipboardManager.formattedTotalSize)
+                LabeledContent("Current Items") {
+                    Text("\(clipboardManager.items.count) items")
                 }
 
-                LabeledContent("Items") {
-                    Text("\(clipboardManager.items.count) items")
+                LabeledContent("Current Usage") {
+                    Text(clipboardManager.formattedTotalSize)
                 }
             }
 

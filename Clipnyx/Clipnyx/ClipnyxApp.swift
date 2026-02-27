@@ -11,11 +11,6 @@ struct ClipnyxApp: App {
                 .environment(appDelegate.clipboardManager)
         }
         .menuBarExtraStyle(.window)
-
-        Settings {
-            SettingsView()
-                .environment(appDelegate.clipboardManager)
-        }
     }
 }
 
@@ -25,6 +20,7 @@ struct ClipnyxApp: App {
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let clipboardManager = ClipboardManager()
     private var popupController = PopupPanelController()
+    private var settingsWindow: NSWindow?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // アクセシビリティ権限の確認（未登録時のみシステムダイアログ表示）
@@ -37,10 +33,57 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self.popupController.toggle(clipboardManager: self.clipboardManager)
         }
         HotKeyManager.shared.register()
+
+        // 設定ウィンドウ表示リクエスト
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(showSettings),
+            name: .openSettingsRequest,
+            object: nil
+        )
     }
 
     func applicationWillTerminate(_ notification: Notification) {
         HotKeyManager.shared.unregister()
         clipboardManager.stopPolling()
     }
+
+    @objc func showSettings() {
+        if let settingsWindow {
+            settingsWindow.orderFrontRegardless()
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+
+        let settingsView = SettingsView()
+            .environment(clipboardManager)
+
+        let window = NSWindow(
+            contentRect: .zero,
+            styleMask: [.titled, .closable],
+            backing: .buffered,
+            defer: false
+        )
+        window.title = String(localized: "Settings")
+        window.contentView = NSHostingView(rootView: settingsView)
+        window.setContentSize(window.contentView!.fittingSize)
+        window.center()
+        window.isReleasedWhenClosed = false
+        window.delegate = self
+        self.settingsWindow = window
+
+        window.orderFrontRegardless()
+        NSApp.activate(ignoringOtherApps: true)
+    }
+}
+
+extension AppDelegate: NSWindowDelegate {
+    func windowWillClose(_ notification: Notification) {
+        guard (notification.object as? NSWindow) === settingsWindow else { return }
+        settingsWindow = nil
+    }
+}
+
+extension Notification.Name {
+    static let openSettingsRequest = Notification.Name("openSettingsRequest")
 }

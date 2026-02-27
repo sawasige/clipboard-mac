@@ -2,7 +2,6 @@ import SwiftUI
 
 struct MenuBarView: View {
     @Environment(ClipboardManager.self) private var clipboardManager
-
     @State private var searchText = ""
     @State private var selectedCategory: ClipboardContentCategory?
     @State private var hoveredItemID: UUID?
@@ -145,13 +144,9 @@ struct MenuBarView: View {
                 }
                 .help("Delete All")
 
-                SettingsLink {
-                    FooterIconLabel(icon: "gearshape", color: .secondary)
+                FooterIconButton(icon: "gearshape", color: .secondary) {
+                    NotificationCenter.default.post(name: .openSettingsRequest, object: nil)
                 }
-                .buttonStyle(.plain)
-                .simultaneousGesture(TapGesture().onEnded {
-                    NSApp.activate(ignoringOtherApps: true)
-                })
                 .help("Settings")
 
                 FooterIconButton(icon: "power", color: .red) {

@@ -235,6 +235,26 @@
         }
       }
     },
+    "Current Items" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "現在の件数"
+          }
+        }
+      }
+    },
+    "Current Usage" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "現在の使用量"
+          }
+        }
+      }
+    },
     "Data Size" : {
       "localizations" : {
         "ja" : {
@@ -375,16 +395,6 @@
         }
       }
     },
-    "Items" : {
-      "localizations" : {
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "アイテム数"
-          }
-        }
-      }
-    },
     "Launch at Login" : {
       "localizations" : {
         "ja" : {
@@ -395,12 +405,12 @@
         }
       }
     },
-    "Max History" : {
+    "Max Items" : {
       "localizations" : {
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "最大履歴数"
+            "value" : "保存件数の上限"
           }
         }
       }
@@ -410,7 +420,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "最大容量"
+            "value" : "保存容量の上限"
           }
         }
       }
@@ -621,16 +631,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "起動"
-          }
-        }
-      }
-    },
-    "Storage Used" : {
-      "localizations" : {
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "使用容量"
           }
         }
       }
