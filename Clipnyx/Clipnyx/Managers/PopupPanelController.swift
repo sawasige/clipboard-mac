@@ -105,9 +105,10 @@ final class PopupPanelController {
         close()
 
         guard let targetApp else { return }
-
-        targetApp.activate()
-        performPaste(targetPID: targetApp.processIdentifier, attempt: 0)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            targetApp.activate()
+            self.performPaste(targetPID: targetApp.processIdentifier, attempt: 0)
+        }
     }
 
     private func performPaste(targetPID: pid_t, attempt: Int) {
