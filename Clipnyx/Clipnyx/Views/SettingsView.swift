@@ -123,6 +123,12 @@ private struct AccessibilityStatusView: View {
                 }
             }
         }
+        .task {
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(2))
+                isGranted = AXIsProcessTrusted()
+            }
+        }
 
         if !isGranted {
             Text("Accessibility permission is required for paste and cursor detection. You may need to restart the app after granting permission.")
@@ -133,17 +139,6 @@ private struct AccessibilityStatusView: View {
                 NSWorkspace.shared.open(
                     URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!
                 )
-            }
-        }
-
-        Button("Refresh Status") {
-            isGranted = AXIsProcessTrusted()
-        }
-        .font(.caption)
-        .task {
-            while !Task.isCancelled {
-                try? await Task.sleep(for: .seconds(2))
-                isGranted = AXIsProcessTrusted()
             }
         }
     }

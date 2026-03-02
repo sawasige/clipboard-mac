@@ -245,17 +245,6 @@
         }
       }
     },
-    "Copied!" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "コピーしました！"
-          }
-        }
-      }
-    },
     "Copy App Path" : {
       "localizations" : {
         "ja" : {
@@ -612,16 +601,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "終了"
-          }
-        }
-      }
-    },
-    "Refresh Status" : {
-      "localizations" : {
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "状態を更新"
           }
         }
       }
