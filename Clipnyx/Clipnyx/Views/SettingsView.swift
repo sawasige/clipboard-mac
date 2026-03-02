@@ -6,11 +6,15 @@ struct SettingsView: View {
     @Environment(ClipboardManager.self) private var clipboardManager
 
     var body: some View {
-        @Bindable var manager = clipboardManager
         TabView {
-            GeneralTab(clipboardManager: clipboardManager)
+            GeneralTab()
                 .tabItem {
                     Label("General", systemImage: "gear")
+                }
+
+            HistoryTab(clipboardManager: clipboardManager)
+                .tabItem {
+                    Label("History", systemImage: "clock")
                 }
 
             FilterTab(clipboardManager: clipboardManager)
@@ -26,6 +30,32 @@ struct SettingsView: View {
 // MARK: - General Tab
 
 private struct GeneralTab: View {
+    var body: some View {
+        Form {
+            Section("Startup") {
+                LaunchAtLoginToggle()
+            }
+
+            Section("Hot Key") {
+                HotKeyRecorderRow()
+            }
+
+            Section("Accessibility") {
+                AccessibilityStatusView()
+            }
+
+            Section("About") {
+                LabeledContent("Version") {
+                    Text(verbatim: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "–")
+                }
+            }
+        }
+    }
+}
+
+// MARK: - History Tab
+
+private struct HistoryTab: View {
     @Bindable var clipboardManager: ClipboardManager
 
     private let historyCountOptions = [20, 50, 100, 200, 500]
@@ -62,24 +92,6 @@ private struct GeneralTab: View {
             Section {
                 Button("Delete All History", role: .destructive) {
                     clipboardManager.removeAllItems()
-                }
-            }
-
-            Section("Accessibility") {
-                AccessibilityStatusView()
-            }
-
-            Section("Startup") {
-                LaunchAtLoginToggle()
-            }
-
-            Section("Hot Key") {
-                HotKeyRecorderRow()
-            }
-
-            Section("About") {
-                LabeledContent("Version") {
-                    Text(verbatim: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "–")
                 }
             }
         }
