@@ -143,6 +143,16 @@
         }
       }
     },
+    "Accessibility Permission Required" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アクセシビリティ権限が必要です"
+          }
+        }
+      }
+    },
     "All" : {
       "localizations" : {
         "ja" : {
@@ -195,6 +205,16 @@
         }
       }
     },
+    "Clipnyx needs accessibility permission to paste clipboard items. Please add Clipnyx in System Settings → Privacy & Security → Accessibility." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ペースト機能にはアクセシビリティ権限が必要です。システム設定 → プライバシーとセキュリティ → アクセシビリティ で Clipnyx を追加してください。"
+          }
+        }
+      }
+    },
     "Color" : {
       "localizations" : {
         "ja" : {
@@ -221,6 +241,27 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "コピーした内容がここに表示されます"
+          }
+        }
+      }
+    },
+    "Copied!" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "コピーしました！"
+          }
+        }
+      }
+    },
+    "Copy App Path" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アプリのパスをコピー"
           }
         }
       }
@@ -391,6 +432,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "画像 %lld×%lld"
+          }
+        }
+      }
+    },
+    "Later" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "あとで"
           }
         }
       }
