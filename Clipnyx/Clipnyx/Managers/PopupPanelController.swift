@@ -19,7 +19,6 @@ final class PopupPanelController {
     private var panel: NSPanel?
     private var previousApp: NSRunningApplication?
     private var clickMonitor: Any?
-    private var appDeactivationObserver: Any?
     var isVisible: Bool = false
 
     func toggle(clipboardManager: ClipboardManager) {
@@ -71,6 +70,7 @@ final class PopupPanelController {
                 self?.closeAndPaste()
             }
         )
+
         panel.contentView = NSHostingView(rootView: contentView)
 
         self.panel = panel
@@ -81,7 +81,6 @@ final class PopupPanelController {
         panel.setFrameOrigin(panelOrigin)
         panel.makeKeyAndOrderFront(nil)
         setupClickMonitor()
-        setupDeactivationObserver()
     }
 
     func close() {
@@ -89,13 +88,12 @@ final class PopupPanelController {
             NSEvent.removeMonitor(monitor)
             clickMonitor = nil
         }
-        if let observer = appDeactivationObserver {
-            NSWorkspace.shared.notificationCenter.removeObserver(observer)
-            appDeactivationObserver = nil
-        }
         panel?.orderOut(nil)
         panel = nil
         isVisible = false
+
+        // 元のアプリを再アクティベート
+        previousApp?.activate()
     }
 
     func closeAndPaste() {
@@ -121,14 +119,8 @@ final class PopupPanelController {
             return
         }
 
-        Self.tryPaste(targetPID: targetPID)
+        Self.postPasteEvent()
     }
-
-    private static func tryPaste(targetPID: pid_t) {
-        postPasteEvent()
-    }
-
-    // MARK: - Paste Event Fallback
 
     private static func postPasteEvent() {
         guard let keyDown = CGEvent(keyboardEventSource: nil, virtualKey: 0x09, keyDown: true),
@@ -165,18 +157,6 @@ final class PopupPanelController {
         }
     }
 
-    private func setupDeactivationObserver() {
-        guard appDeactivationObserver == nil else { return }
-        appDeactivationObserver = NSWorkspace.shared.notificationCenter.addObserver(
-            forName: NSWorkspace.didActivateApplicationNotification,
-            object: nil, queue: .main
-        ) { [weak self] notification in
-            guard let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication,
-                  app.bundleIdentifier != Bundle.main.bundleIdentifier else { return }
-            MainActor.assumeIsolated {
-                self?.close()
-            }
-        }
-    }
+
 
 }
