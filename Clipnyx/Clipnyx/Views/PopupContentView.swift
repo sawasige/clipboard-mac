@@ -296,20 +296,7 @@ private struct PopupItemRow: View {
                 .foregroundStyle(item.category.color)
                 .frame(width: 16)
 
-            // Thumbnail or preview text
-            if let thumbnailData = item.thumbnailData,
-               let nsImage = NSImage(data: thumbnailData) {
-                Image(nsImage: nsImage)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(maxHeight: 40)
-                    .clipShape(RoundedRectangle(cornerRadius: 4))
-            }
-
-            Text(item.previewText)
-                .font(.system(size: 12))
-                .lineLimit(2)
-                .truncationMode(.tail)
+            ItemPreviewContent(item: item, maxThumbnailHeight: 40)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             // Data size
