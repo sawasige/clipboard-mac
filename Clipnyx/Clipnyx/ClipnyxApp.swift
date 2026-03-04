@@ -61,18 +61,33 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        let settingsView = SettingsView()
-            .environment(clipboardManager)
+        let tabVC = NSTabViewController()
+        tabVC.tabStyle = .toolbar
+        tabVC.title = String(localized: "Settings")
 
-        let window = NSWindow(
-            contentRect: .zero,
-            styleMask: [.titled, .closable],
-            backing: .buffered,
-            defer: false
-        )
-        window.title = String(localized: "Settings")
-        window.contentView = NSHostingView(rootView: settingsView)
-        window.setContentSize(window.contentView!.fittingSize)
+        let generalItem = NSTabViewItem(viewController: NSHostingController(
+            rootView: GeneralTab().formStyle(.grouped)
+        ))
+        generalItem.label = String(localized: "General")
+        generalItem.image = NSImage(systemSymbolName: "gear", accessibilityDescription: nil)
+        tabVC.addTabViewItem(generalItem)
+
+        let historyItem = NSTabViewItem(viewController: NSHostingController(
+            rootView: HistoryTab(clipboardManager: clipboardManager).formStyle(.grouped)
+        ))
+        historyItem.label = String(localized: "History")
+        historyItem.image = NSImage(systemSymbolName: "clock", accessibilityDescription: nil)
+        tabVC.addTabViewItem(historyItem)
+
+        let filterItem = NSTabViewItem(viewController: NSHostingController(
+            rootView: FilterTab(clipboardManager: clipboardManager).formStyle(.grouped)
+        ))
+        filterItem.label = String(localized: "Filter")
+        filterItem.image = NSImage(systemSymbolName: "line.3.horizontal.decrease.circle", accessibilityDescription: nil)
+        tabVC.addTabViewItem(filterItem)
+
+        let window = NSWindow(contentViewController: tabVC)
+        window.styleMask = [.titled, .closable]
         window.center()
         window.isReleasedWhenClosed = false
         window.delegate = self

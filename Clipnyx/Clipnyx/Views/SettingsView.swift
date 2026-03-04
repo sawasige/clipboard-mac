@@ -2,34 +2,9 @@ import SwiftUI
 import AppKit
 import ServiceManagement
 
-struct SettingsView: View {
-    @Environment(ClipboardManager.self) private var clipboardManager
-
-    var body: some View {
-        TabView {
-            GeneralTab()
-                .tabItem {
-                    Label("General", systemImage: "gear")
-                }
-
-            HistoryTab(clipboardManager: clipboardManager)
-                .tabItem {
-                    Label("History", systemImage: "clock")
-                }
-
-            FilterTab(clipboardManager: clipboardManager)
-                .tabItem {
-                    Label("Filter", systemImage: "line.3.horizontal.decrease.circle")
-                }
-        }
-        .formStyle(.grouped)
-        .frame(width: 400, height: 350)
-    }
-}
-
 // MARK: - General Tab
 
-private struct GeneralTab: View {
+struct GeneralTab: View {
     var body: some View {
         Form {
             Section("Startup") {
@@ -57,7 +32,7 @@ private struct GeneralTab: View {
 
 // MARK: - History Tab
 
-private struct HistoryTab: View {
+struct HistoryTab: View {
     @Bindable var clipboardManager: ClipboardManager
 
     private let historyCountOptions = [20, 50, 100, 200, 500]
@@ -229,7 +204,7 @@ private struct HotKeyRecorderRow: View {
 
 // MARK: - Filter Tab
 
-private struct FilterTab: View {
+struct FilterTab: View {
     @Bindable var clipboardManager: ClipboardManager
 
     var body: some View {

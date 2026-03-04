@@ -180,7 +180,7 @@ final class PopupPanelController {
         self.toastPanel = toast
 
         Task { @MainActor [weak self] in
-            try? await Task.sleep(for: .seconds(1.5))
+            try? await Task.sleep(for: .milliseconds(800))
             await NSAnimationContext.runAnimationGroup { context in
                 context.duration = 0.3
                 toast.animator().alphaValue = 0
