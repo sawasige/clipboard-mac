@@ -1,8 +1,7 @@
 name: Release Full (Homebrew)
 
 on:
-  push:
-    tags: ["v*"]
+  workflow_dispatch:
 
 jobs:
   build-and-release:
@@ -45,13 +44,13 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple:,codesign: \
             -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
 
-      # ── バージョン設定 ──
-      - name: Set version from tag
+      # ── バージョン読み取り ──
+      - name: Read version from project
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
+          VERSION=$(sed -n 's/.*MARKETING_VERSION = \(.*\);/\1/p' "$PROJECT_PATH/project.pbxproj" | head -1 | tr -d ' ')
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
-          sed -i '' "s/MARKETING_VERSION = .*;/MARKETING_VERSION = ${VERSION};/g" \
-            "$PROJECT_PATH/project.pbxproj"
+          echo "TAG=v$VERSION" >> "$GITHUB_ENV"
+          echo "Version: $VERSION"
           sed -i '' "s/CURRENT_PROJECT_VERSION = .*;/CURRENT_PROJECT_VERSION = ${GITHUB_RUN_NUMBER};/g" \
             "$PROJECT_PATH/project.pbxproj"
 
@@ -147,7 +146,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "$GITHUB_REF_NAME" \
+          gh release create "$TAG" \
             "build/$APP_NAME.dmg" \
             --title "$APP_NAME $VERSION" \
             --generate-notes
@@ -158,7 +157,7 @@ jobs:
         run: |
           SPARKLE_ATTRS=$(echo "$SPARKLE_SIG" | sed -n 's/.*edSignature="\([^"]*\)".*/\1/p')
           PUB_DATE=$(date -u '+%a, %d %b %Y %H:%M:%S %z')
-          DMG_URL="https://github.com/sawasige/clipboard-mac/releases/download/${GITHUB_REF_NAME}/${APP_NAME}.dmg"
+          DMG_URL="https://github.com/sawasige/clipboard-mac/releases/download/${TAG}/${APP_NAME}.dmg"
           python3 -c "
           import sys
           appcast = open('docs/appcast.xml').read()
@@ -186,6 +185,12 @@ jobs:
           git add Casks/clipnyx.rb docs/appcast.xml
           git commit -m "Homebrew Cask を v${VERSION} に更新し appcast.xml を追記"
           git push origin HEAD:main
+
+      # ── タグ作成 ──
+      - name: Create and push tag
+        run: |
+          git tag "$TAG"
+          git push origin "$TAG"
 
       # ── GitHub Pages デプロイトリガー ──
       - name: Trigger GitHub Pages deployment
