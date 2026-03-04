@@ -5,6 +5,13 @@
     <link>https://sawasige.github.io/clipboard-mac/appcast.xml</link>
     <description>Clipnyx updates</description>
     <language>en</language>
+        <item>
+    <title>1.1.0</title>
+    <pubDate>Wed, 04 Mar 2026 04:54:09 +0000</pubDate>
+    <sparkle:version>6</sparkle:version>
+    <sparkle:shortVersionString>1.1.0</sparkle:shortVersionString>
+    <enclosure url="https://github.com/sawasige/clipboard-mac/releases/download/v1.1.0/Clipnyx.dmg" length="3086872" type="application/octet-stream" sparkle:edSignature="mwWIMVtyyAicdQEQhMOWiEDYHqUhR6fWXw+NKjvpvA14zuukNcBfbuQtBjCVVyT7hO5urtRW/GQJYmq5n1OMDA==" />
+  </item>
     <!-- Items are prepended by CI on each release -->
   </channel>
 </rss>
