@@ -9,6 +9,7 @@ jobs:
     runs-on: macos-15
     permissions:
       contents: write
+      actions: write
 
     env:
       APP_NAME: Clipnyx
