@@ -26,6 +26,13 @@
     <sparkle:shortVersionString>1.1.1</sparkle:shortVersionString>
     <enclosure url="https://github.com/sawasige/clipboard-mac/releases/download/v1.1.1/Clipnyx.dmg" length="3086514" type="application/octet-stream" sparkle:edSignature="mggrbN2JZzJ59nc+HdcXE5bNpJhM1iy6Ec/dF3cR8+IIrFMXZeu+h1ZRb9dzW01+yuidoiZJvYt0GofvyLwrBw==" />
   </item>
+        <item>
+    <title>1.1.2</title>
+    <pubDate>Wed, 04 Mar 2026 10:04:31 +0000</pubDate>
+    <sparkle:version>9</sparkle:version>
+    <sparkle:shortVersionString>1.1.2</sparkle:shortVersionString>
+    <enclosure url="https://github.com/sawasige/clipboard-mac/releases/download/v1.1.2/Clipnyx.dmg" length="3086890" type="application/octet-stream" sparkle:edSignature="6EuTHuyE9s7YVLfd0nZAz0Eu5KK7CPjkh8lBbISyBpkLedvt+TdDdNVSMXUJ81HUV/BZe9eUvmesYm34dpWjCw==" />
+  </item>
     <!-- Items are prepended by CI on each release -->
   </channel>
 </rss>
