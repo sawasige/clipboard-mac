@@ -141,16 +141,6 @@ jobs:
           DMG_SIZE=$(stat -f%z "build/$APP_NAME.dmg")
           echo "DMG_SIZE=$DMG_SIZE" >> "$GITHUB_ENV"
 
-      # ── GitHub Release ──
-      - name: Create GitHub Release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release create "$TAG" \
-            "build/$APP_NAME.dmg" \
-            --title "$APP_NAME $VERSION" \
-            --generate-notes
-
       # ── appcast.xml 更新 ──
       - name: Update appcast.xml
         shell: bash
@@ -191,6 +181,16 @@ jobs:
         run: |
           git tag "$TAG"
           git push origin "$TAG"
+
+      # ── GitHub Release ──
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$TAG" \
+            "build/$APP_NAME.dmg" \
+            --title "$APP_NAME $VERSION" \
+            --generate-notes
 
       # ── GitHub Pages デプロイトリガー ──
       - name: Trigger GitHub Pages deployment
