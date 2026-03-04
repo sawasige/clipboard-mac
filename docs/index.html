@@ -99,6 +99,63 @@
       height: 48px;
     }
 
+    .download-buttons {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .dmg-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      height: 48px;
+      padding: 0 24px;
+      background: var(--color-text);
+      color: var(--color-bg);
+      text-decoration: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      transition: opacity 0.2s;
+    }
+
+    .dmg-button:hover {
+      opacity: 0.8;
+    }
+
+    .dmg-button svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+
+    .install-hint {
+      margin-top: 32px;
+      text-align: center;
+    }
+
+    .install-hint p {
+      font-size: 14px;
+      color: var(--color-text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .install-hint code {
+      display: inline-block;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-family: "SF Mono", SFMono-Regular, Menlo, monospace;
+      font-size: 13px;
+      color: var(--color-text);
+      user-select: all;
+      cursor: text;
+    }
+
     /* Screenshot */
     .screenshot {
       text-align: center;
@@ -269,12 +326,21 @@
     </picture>
     <h1>Clipnyx</h1>
     <p class="tagline" data-ja="macOSメニューバーに常駐する、軽量クリップボード履歴マネージャー。" data-en="A lightweight clipboard history manager that lives in your macOS menu bar."></p>
-    <a class="app-store-badge" href="https://apps.apple.com/app/clipnyx/id6744227700" aria-label="Download on the App Store">
-      <picture>
-        <source srcset="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/white/ja-jp" media="(prefers-color-scheme: dark)">
-        <img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/ja-jp" alt="Download on the App Store">
-      </picture>
-    </a>
+    <div class="download-buttons">
+      <a class="app-store-badge" href="https://apps.apple.com/app/clipnyx/id6744227700" aria-label="Download on the App Store">
+        <picture>
+          <source srcset="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/white/ja-jp" media="(prefers-color-scheme: dark)">
+          <img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/ja-jp" alt="Download on the App Store">
+        </picture>
+      </a>
+      <a class="dmg-button" href="https://github.com/sawasige/clipboard-mac/releases/latest/download/Clipnyx.dmg" data-ja="⬇ DMG ダウンロード" data-en="⬇ Download DMG">
+        ⬇ DMG ダウンロード
+      </a>
+    </div>
+    <div class="install-hint">
+      <p data-ja="Homebrew でもインストールできます:" data-en="Also available via Homebrew:"></p>
+      <code>brew install sawasige/clipboard-mac/clipnyx</code>
+    </div>
   </section>
 
   <!-- Screenshot -->
