@@ -186,6 +186,13 @@ jobs:
           git commit -m "Homebrew Cask を v${VERSION} に更新し appcast.xml を追記"
           git push origin HEAD:main
 
+      # ── GitHub Pages デプロイトリガー ──
+      - name: Trigger GitHub Pages deployment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh workflow run pages.yml --repo ${{ github.repository }}
+
       # ── クリーンアップ ──
       - name: Clean up keychain
         if: always()
