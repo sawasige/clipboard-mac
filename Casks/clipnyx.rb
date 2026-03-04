@@ -1,6 +1,6 @@
 cask "clipnyx" do
   version "1.1.0"
-  sha256 "242689842d9bd87bc05bc55c1190ebbc9f41c9fcd23cba514af1f8e9d610f7fa"
+  sha256 "800c12aea3ffdd0cc10c090f19f69f278cdb6421582ba9324d5ffddbf2eadfbf"
 
   url "https://github.com/sawasige/clipboard-mac/releases/download/v#{version}/Clipnyx.dmg"
   name "Clipnyx"
