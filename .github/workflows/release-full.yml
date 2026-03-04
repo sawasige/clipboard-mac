@@ -159,22 +159,25 @@ jobs:
 
       # ── appcast.xml 更新 ──
       - name: Update appcast.xml
+        shell: bash
         run: |
           SPARKLE_ATTRS=$(echo "$SPARKLE_SIG" | sed -n 's/.*edSignature="\([^"]*\)".*/\1/p')
           PUB_DATE=$(date -u '+%a, %d %b %Y %H:%M:%S %z')
           DMG_URL="https://github.com/sawasige/clipboard-mac/releases/download/${GITHUB_REF_NAME}/${APP_NAME}.dmg"
-
-          ITEM="\\
-        <item>\\
-          <title>${VERSION}</title>\\
-          <pubDate>${PUB_DATE}</pubDate>\\
-          <sparkle:version>${GITHUB_RUN_NUMBER}</sparkle:version>\\
-          <sparkle:shortVersionString>${VERSION}</sparkle:shortVersionString>\\
-          <enclosure url=\"${DMG_URL}\" length=\"${DMG_SIZE}\" type=\"application/octet-stream\" sparkle:edSignature=\"${SPARKLE_ATTRS}\" />\\
-        </item>"
-
-          sed -i '' "s|<!-- Items are prepended by CI on each release -->|${ITEM}\\
-    <!-- Items are prepended by CI on each release -->|" docs/appcast.xml
+          python3 -c "
+          import sys
+          appcast = open('docs/appcast.xml').read()
+          item = '''    <item>
+              <title>${VERSION}</title>
+              <pubDate>${PUB_DATE}</pubDate>
+              <sparkle:version>${GITHUB_RUN_NUMBER}</sparkle:version>
+              <sparkle:shortVersionString>${VERSION}</sparkle:shortVersionString>
+              <enclosure url=\"${DMG_URL}\" length=\"${DMG_SIZE}\" type=\"application/octet-stream\" sparkle:edSignature=\"${SPARKLE_ATTRS}\" />
+            </item>'''
+          marker = '<!-- Items are prepended by CI on each release -->'
+          appcast = appcast.replace(marker, item + '\n    ' + marker)
+          open('docs/appcast.xml', 'w').write(appcast)
+          "
 
       # ── Homebrew Cask 更新 ──
       - name: Update Homebrew Cask formula
