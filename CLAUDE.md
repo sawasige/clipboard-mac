@@ -47,3 +47,5 @@ Clipnyx/Clipnyx/
 ## コミット規約
 - コミットメッセージは日本語
 - Co-Authored-By は付けない
+- main ブランチに直接コミットしない。必ずブランチを切って PR を作成する
+- PR マージ時は `gh pr merge --delete-branch` を使う

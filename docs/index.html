@@ -96,7 +96,8 @@
     }
 
     .app-store-badge img {
-      height: 48px;
+      height: 40px;
+      vertical-align: middle;
     }
 
     .download-buttons {
@@ -107,29 +108,54 @@
       flex-wrap: wrap;
     }
 
-    .dmg-button {
+    .dmg-badge {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      height: 48px;
-      padding: 0 24px;
-      background: var(--color-text);
-      color: var(--color-bg);
+      gap: 3px;
+      height: 40px;
+      padding: 0 13px 0 8px;
+      background: #000;
+      color: #fff;
       text-decoration: none;
-      border-radius: 12px;
-      font-size: 16px;
-      font-weight: 600;
+      border-radius: 7px;
+      border: 0.5px solid #a6a6a6;
       transition: opacity 0.2s;
     }
 
-    .dmg-button:hover {
+    @media (prefers-color-scheme: dark) {
+      .dmg-badge {
+        background: #fff;
+        color: #000;
+        border-color: #fff;
+      }
+    }
+
+    .dmg-badge:hover {
       opacity: 0.8;
     }
 
-    .dmg-button svg {
-      width: 20px;
-      height: 20px;
+    .dmg-badge svg {
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
       fill: currentColor;
+    }
+
+    .dmg-badge-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.1;
+    }
+
+    .dmg-badge-label {
+      font-size: 8.5px;
+      font-weight: 500;
+    }
+
+    .dmg-badge-title {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
     }
 
     .install-hint {
@@ -143,17 +169,48 @@
       margin-bottom: 8px;
     }
 
-    .install-hint code {
-      display: inline-block;
+    .install-hint-cmd {
+      display: inline-flex;
+      align-items: center;
+      gap: 0;
       background: var(--color-surface);
       border: 1px solid var(--color-border);
       border-radius: 8px;
-      padding: 8px 16px;
+      overflow: hidden;
+    }
+
+    .install-hint-cmd code {
+      padding: 8px 12px;
       font-family: "SF Mono", SFMono-Regular, Menlo, monospace;
       font-size: 13px;
       color: var(--color-text);
       user-select: all;
       cursor: text;
+    }
+
+    .copy-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 100%;
+      padding: 8px 0;
+      background: none;
+      border: none;
+      border-left: 1px solid var(--color-border);
+      cursor: pointer;
+      color: var(--color-text-secondary);
+      transition: color 0.2s;
+    }
+
+    .copy-btn:hover {
+      color: var(--color-text);
+    }
+
+    .copy-btn svg {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
     }
 
     /* Screenshot */
@@ -226,6 +283,57 @@
       line-height: 1.6;
     }
 
+    /* Editions */
+    .editions {
+      padding: 80px 0;
+    }
+
+    .editions-heading {
+      text-align: center;
+      font-size: 40px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 16px;
+    }
+
+    .editions-sub {
+      text-align: center;
+      font-size: 18px;
+      color: var(--color-text-secondary);
+      margin-bottom: 48px;
+    }
+
+    .editions-table {
+      width: 100%;
+      max-width: 640px;
+      margin: 0 auto;
+      border-collapse: collapse;
+    }
+
+    .editions-table th,
+    .editions-table td {
+      padding: 14px 20px;
+      text-align: center;
+      font-size: 15px;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .editions-table th:first-child,
+    .editions-table td:first-child {
+      text-align: left;
+      font-weight: 500;
+    }
+
+    .editions-table thead th {
+      font-size: 16px;
+      font-weight: 600;
+      padding-bottom: 16px;
+    }
+
+    .editions-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
     /* Footer */
     footer {
       border-top: 1px solid var(--color-border);
@@ -294,6 +402,10 @@
       .features-grid {
         grid-template-columns: 1fr;
       }
+
+      .editions-heading {
+        font-size: 32px;
+      }
     }
 
     @media (max-width: 480px) {
@@ -333,13 +445,22 @@
           <img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/ja-jp" alt="Download on the App Store">
         </picture>
       </a>
-      <a class="dmg-button" href="https://github.com/sawasige/clipnyx/releases/latest/download/Clipnyx.dmg" data-ja="⬇ DMG ダウンロード" data-en="⬇ Download DMG">
-        ⬇ DMG ダウンロード
+      <a class="dmg-badge" href="https://github.com/sawasige/clipnyx/releases/latest/download/Clipnyx.dmg">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+        <span class="dmg-badge-text">
+          <span class="dmg-badge-label" data-ja="ダウンロード" data-en="Download"></span>
+          <span class="dmg-badge-title">Clipnyx.dmg</span>
+        </span>
       </a>
     </div>
     <div class="install-hint">
       <p data-ja="Homebrew でもインストールできます:" data-en="Also available via Homebrew:"></p>
-      <code>brew install sawasige/clipnyx/clipnyx</code>
+      <span class="install-hint-cmd">
+        <code>brew install sawasige/clipnyx/clipnyx</code>
+        <button class="copy-btn" onclick="copyBrewCmd()" aria-label="Copy">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+        </button>
+      </span>
     </div>
   </section>
 
@@ -370,10 +491,49 @@
         </div>
         <div class="feature-card">
           <span class="feature-icon" aria-hidden="true">🔒</span>
-          <h3 data-ja="完全ローカル動作" data-en="Fully Local & Private"></h3>
-          <p data-ja="すべてのデータはMac上にのみ保存。外部サーバーへの通信は一切ありません。" data-en="All data stays on your Mac. No servers, no tracking, no data collection."></p>
+          <h3 data-ja="プライバシー重視" data-en="Privacy First"></h3>
+          <p data-ja="クリップボードデータはすべてMac上にローカル保存。外部サーバーへの送信やトラッキングは一切ありません。" data-en="All clipboard data stays on your Mac. No data is sent to external servers, no tracking, no data collection."></p>
         </div>
       </div>
+    </div>
+  </section>
+
+  <!-- Editions -->
+  <section class="editions">
+    <div class="container">
+      <h2 class="editions-heading" data-ja="2つのエディション" data-en="Two Editions"></h2>
+      <p class="editions-sub" data-ja="用途に合わせてお選びください。" data-en="Choose the one that fits your needs."></p>
+      <table class="editions-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>App Store</th>
+            <th>Full (.dmg)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td data-ja="配布元" data-en="Distribution"></td>
+            <td>Mac App Store</td>
+            <td>Homebrew / .dmg</td>
+          </tr>
+          <tr>
+            <td data-ja="サンドボックス" data-en="Sandbox"></td>
+            <td data-ja="あり" data-en="Yes"></td>
+            <td data-ja="なし" data-en="No"></td>
+          </tr>
+          <tr>
+            <td data-ja="ダイレクトペースト" data-en="Direct Paste"></td>
+            <td>—</td>
+            <td>✓</td>
+          </tr>
+          <tr>
+            <td data-ja="自動アップデート" data-en="Auto Update"></td>
+            <td>App Store</td>
+            <td>Sparkle / brew</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </section>
 
@@ -425,6 +585,15 @@
       var initialLang = (navigator.language || '').startsWith('ja') ? 'ja' : 'en';
       applyLang(initialLang);
     })();
+
+    function copyBrewCmd() {
+      navigator.clipboard.writeText('brew install sawasige/clipnyx/clipnyx');
+      var btn = document.querySelector('.copy-btn');
+      btn.innerHTML = '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" fill="currentColor"/></svg>';
+      setTimeout(function () {
+        btn.innerHTML = '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" fill="currentColor"/></svg>';
+      }, 1500);
+    }
   </script>
 
 </body>
