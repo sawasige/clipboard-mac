@@ -27,6 +27,7 @@ final class ClipboardStore: Sendable {
         let totalDataSize: Int
         let contentHash: Data
         let representationInfos: [RepInfoEntry]
+        let isPinned: Bool?
     }
 
     private struct RepInfoEntry: Codable {
@@ -51,7 +52,8 @@ final class ClipboardStore: Sendable {
                 hasThumbnail: item.thumbnailData != nil,
                 totalDataSize: item.totalDataSize,
                 contentHash: item.contentHash,
-                representationInfos: item.representationInfos.map { RepInfoEntry(type: $0.type, size: $0.size) }
+                representationInfos: item.representationInfos.map { RepInfoEntry(type: $0.type, size: $0.size) },
+                isPinned: item.isPinned
             )
         }
         writeQueue.async {
@@ -123,7 +125,8 @@ final class ClipboardStore: Sendable {
                     thumbnailData: thumbnailData,
                     totalDataSize: entry.totalDataSize,
                     contentHash: entry.contentHash,
-                    representationInfos: entry.representationInfos.map { RepresentationInfo(type: $0.type, size: $0.size) }
+                    representationInfos: entry.representationInfos.map { RepresentationInfo(type: $0.type, size: $0.size) },
+                    isPinned: entry.isPinned ?? false
                 )
             }
         } catch {

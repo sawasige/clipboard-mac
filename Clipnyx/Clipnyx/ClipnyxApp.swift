@@ -88,6 +88,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         filterItem.image = NSImage(systemSymbolName: "line.3.horizontal.decrease.circle", accessibilityDescription: nil)
         tabVC.addTabViewItem(filterItem)
 
+        let variablesItem = NSTabViewItem(viewController: NSHostingController(
+            rootView: VariablesTab().formStyle(.grouped)
+        ))
+        variablesItem.label = String(localized: "Variables")
+        variablesItem.image = NSImage(systemSymbolName: "curlybraces", accessibilityDescription: nil)
+        tabVC.addTabViewItem(variablesItem)
+
         let window = NSWindow(contentViewController: tabVC)
         window.styleMask = [.titled, .closable]
         window.center()
@@ -95,6 +102,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         window.delegate = self
         self.settingsWindow = window
 
+        NSApp.setActivationPolicy(.regular)
         window.orderFrontRegardless()
         NSApp.activate(ignoringOtherApps: true)
         window.makeKey()
@@ -106,9 +114,11 @@ extension AppDelegate: NSWindowDelegate {
     func windowWillClose(_ notification: Notification) {
         guard (notification.object as? NSWindow) === settingsWindow else { return }
         settingsWindow = nil
+        NSApp.setActivationPolicy(.accessory)
     }
 }
 
 extension Notification.Name {
     static let openSettingsRequest = Notification.Name("openSettingsRequest")
+    static let closePopupPanel = Notification.Name("closePopupPanel")
 }

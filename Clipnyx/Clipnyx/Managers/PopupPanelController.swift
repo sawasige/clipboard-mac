@@ -21,6 +21,18 @@ final class PopupPanelController {
     private var clickMonitor: Any?
     var isVisible: Bool = false
 
+    init() {
+        NotificationCenter.default.addObserver(
+            forName: .closePopupPanel,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.close(restoreFocus: false)
+            }
+        }
+    }
+
     func toggle(clipboardManager: ClipboardManager) {
         if isVisible {
             close()
@@ -32,12 +44,8 @@ final class PopupPanelController {
     func show(clipboardManager: ClipboardManager) {
         guard !isVisible else { return }
 
-        // パネル表示前の最前面アプリを記憶（自分自身は除外）
-        let myBundleID = Bundle.main.bundleIdentifier
-        let frontmost = NSWorkspace.shared.frontmostApplication
-        if frontmost?.bundleIdentifier != myBundleID {
-            previousApp = frontmost
-        }
+        // パネル表示前の最前面アプリを記憶
+        previousApp = NSWorkspace.shared.frontmostApplication
 
         let panelWidth: CGFloat = 380
         let panelHeight: CGFloat = 560
@@ -63,6 +71,7 @@ final class PopupPanelController {
 
         let contentView = PopupContentView(
             clipboardManager: clipboardManager,
+            isMenuBar: false,
             onDismiss: { [weak self] in
                 self?.close()
             },
@@ -83,7 +92,7 @@ final class PopupPanelController {
         setupClickMonitor()
     }
 
-    func close() {
+    func close(restoreFocus: Bool = true) {
         if let monitor = clickMonitor {
             NSEvent.removeMonitor(monitor)
             clickMonitor = nil
@@ -92,13 +101,14 @@ final class PopupPanelController {
         panel = nil
         isVisible = false
 
-        // 元のアプリを再アクティベート
-        previousApp?.activate()
+        if restoreFocus {
+            previousApp?.activate()
+        }
     }
 
     func closeAndPaste() {
         let targetApp = previousApp
-        close()
+        close(restoreFocus: false)
 
         guard let targetApp else { return }
         Task { @MainActor in

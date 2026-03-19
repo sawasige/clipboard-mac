@@ -200,6 +200,27 @@ private struct HotKeyRecorderRow: View {
     }
 }
 
+// MARK: - Variables Tab
+
+struct VariablesTab: View {
+    var body: some View {
+        Form {
+            Section("Variables") {
+                Text("Pin a text item containing variables like {{date}} to use dynamic expansion on paste.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                ForEach(SnippetVariable.allCases, id: \.self) { variable in
+                    LabeledContent(variable.placeholder) {
+                        Text(variable.example)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+        }
+    }
+}
+
 // MARK: - Filter Tab
 
 struct FilterTab: View {

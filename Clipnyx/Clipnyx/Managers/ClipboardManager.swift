@@ -74,26 +74,41 @@ final class ClipboardManager: @unchecked Sendable {
     // MARK: - Item Management
 
     private func addItem(_ newItem: ClipboardItem, representations: [PasteboardRepresentation]) {
-        // Collect duplicate IDs for blob cleanup
-        let duplicateIDs = items.filter { $0.hasSameContent(as: newItem) }.map(\.id)
+        // ピン留めアイテムの重複は除外しない
+        let duplicateIDs = items.filter { !$0.isPinned && $0.hasSameContent(as: newItem) }.map(\.id)
 
-        // Remove duplicates
-        items.removeAll { $0.hasSameContent(as: newItem) }
+        // Remove duplicates (unpinned only)
+        items.removeAll { !$0.isPinned && $0.hasSameContent(as: newItem) }
 
         // Insert at front
         items.insert(newItem, at: 0)
 
-        // Enforce count limit
+        // Enforce count limit (unpinned only)
         var removedIDs = duplicateIDs
-        if items.count > maxHistoryCount {
-            removedIDs += items.suffix(from: maxHistoryCount).map(\.id)
-            items = Array(items.prefix(maxHistoryCount))
+        let unpinnedCount = items.filter({ !$0.isPinned }).count
+        if unpinnedCount > maxHistoryCount {
+            // 末尾から unpinned を削除
+            var removeCount = unpinnedCount - maxHistoryCount
+            var i = items.count - 1
+            while i >= 0, removeCount > 0 {
+                if !items[i].isPinned {
+                    removedIDs.append(items[i].id)
+                    items.remove(at: i)
+                    removeCount -= 1
+                }
+                i -= 1
+            }
         }
 
-        // Enforce total size limit
+        // Enforce total size limit (unpinned only)
         let maxBytes = maxTotalSizeMB * 1024 * 1024
-        while items.count > 1, totalDataSize > maxBytes {
-            removedIDs.append(items.removeLast().id)
+        while items.filter({ !$0.isPinned }).count > 1, totalDataSize > maxBytes {
+            if let lastUnpinnedIndex = items.lastIndex(where: { !$0.isPinned }) {
+                removedIDs.append(items[lastUnpinnedIndex].id)
+                items.remove(at: lastUnpinnedIndex)
+            } else {
+                break
+            }
         }
 
         // Save blobs first, then index
@@ -111,9 +126,25 @@ final class ClipboardManager: @unchecked Sendable {
     }
 
     func removeAllItems() {
-        items.removeAll()
-        store.deleteAll()
+        // ピン留めアイテムは残す
+        let pinned = items.filter(\.isPinned)
+        let removedIDs = items.filter { !$0.isPinned }.map(\.id)
+        items = pinned
+        store.saveIndex(items)
+        if !removedIDs.isEmpty {
+            store.deleteBlobs(for: removedIDs)
+        }
     }
+
+    // MARK: - Pin
+
+    func togglePin(_ item: ClipboardItem) {
+        guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
+        items[index].isPinned.toggle()
+        store.saveIndex(items)
+    }
+
+    // MARK: - Restore
 
     func restoreToClipboard(_ item: ClipboardItem, asPlainText: Bool = false) {
         isRestoringItem = true
@@ -122,11 +153,27 @@ final class ClipboardManager: @unchecked Sendable {
         if let reps = store.loadRepresentations(for: item.id) {
             let pasteboard = NSPasteboard.general
             pasteboard.clearContents()
-            if asPlainText {
-                // Only restore plain text representation
-                if let stringRep = reps.first(where: { $0.pasteboardType == .string }) {
+
+            // テキスト系で変数展開が必要な場合
+            let needsExpansion = item.isPinned && item.previewText.contains("{{")
+
+            if asPlainText || needsExpansion {
+                if let stringRep = reps.first(where: { $0.pasteboardType == .string }),
+                   let text = String(data: stringRep.data, encoding: .utf8) {
+                    let finalText = needsExpansion ? SnippetVariable.expand(text) : text
                     pasteboard.declareTypes([.string], owner: nil)
-                    pasteboard.setData(stringRep.data, forType: .string)
+                    pasteboard.setString(finalText, forType: .string)
+                } else if asPlainText {
+                    // asPlainText だが string rep がない場合
+                    pasteboard.declareTypes([.string], owner: nil)
+                    pasteboard.setData(Data(), forType: .string)
+                } else {
+                    // 変数展開が必要だが string がない → 通常復元
+                    let types = reps.map(\.pasteboardType)
+                    pasteboard.declareTypes(types, owner: nil)
+                    for rep in reps {
+                        pasteboard.setData(rep.data, forType: rep.pasteboardType)
+                    }
                 }
             } else {
                 let types = reps.map(\.pasteboardType)
@@ -138,14 +185,17 @@ final class ClipboardManager: @unchecked Sendable {
         }
         lastChangeCount = NSPasteboard.general.changeCount
 
-        // 並べ替えと保存は非同期（パネル閉じをブロックしない）
-        DispatchQueue.main.async { [weak self] in
-            guard let self else { return }
-            if let index = self.items.firstIndex(where: { $0.id == item.id }) {
-                let moved = self.items.remove(at: index)
-                self.items.insert(moved, at: 0)
+        // ピン留めアイテムは並べ替えしない
+        if !item.isPinned {
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
+                if let index = self.items.firstIndex(where: { $0.id == item.id }) {
+                    let moved = self.items.remove(at: index)
+                    let firstUnpinnedIndex = self.items.firstIndex(where: { !$0.isPinned }) ?? self.items.count
+                    self.items.insert(moved, at: firstUnpinnedIndex)
+                }
+                self.store.saveIndex(self.items)
             }
-            self.store.saveIndex(self.items)
         }
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
