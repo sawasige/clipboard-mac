@@ -21,8 +21,7 @@ Clipnyx/Clipnyx/
 ├── Models/
 │   ├── ClipboardItem.swift       # 履歴アイテムモデル（isPinned 含む）
 │   ├── ClipboardContentCategory.swift # 11カテゴリ分類
-│   ├── PasteboardRepresentation.swift # ペーストボードデータ表現
-│   └── SnippetVariable.swift     # 変数展開（{{date}} 等）
+│   └── PasteboardRepresentation.swift # ペーストボードデータ表現
 ├── Views/
 │   ├── PopupContentView.swift    # 統一ビュー（isMenuBar で挙動分岐）
 │   ├── MenuBarView.swift         # メニューバーラッパー（PopupContentView を再利用）
@@ -45,7 +44,6 @@ Clipnyx/Clipnyx/
   - `true`: フッター表示（設定・終了）、クリック → コピーのみ
   - `false`: フッターなし、クリック → ダイレクトペースト
 - **ピン留め**: `ClipboardItem.isPinned` で管理。時系列表示のまま、件数制限から除外。Tab キーでフィルタ切り替え
-- **変数展開**: ピン留めテキストに `{{date}}` 等を含む場合、ペースト時に `SnippetVariable.expand()` で動的展開
 
 ## ビルド構成
 - **Debug / Release**: App Store 版（サンドボックス、Sparkle なし）

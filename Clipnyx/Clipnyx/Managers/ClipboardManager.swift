@@ -153,27 +153,10 @@ final class ClipboardManager: @unchecked Sendable {
         if let reps = store.loadRepresentations(for: item.id) {
             let pasteboard = NSPasteboard.general
             pasteboard.clearContents()
-
-            // テキスト系で変数展開が必要な場合
-            let needsExpansion = item.isPinned && item.previewText.contains("{{")
-
-            if asPlainText || needsExpansion {
-                if let stringRep = reps.first(where: { $0.pasteboardType == .string }),
-                   let text = String(data: stringRep.data, encoding: .utf8) {
-                    let finalText = needsExpansion ? SnippetVariable.expand(text) : text
+            if asPlainText {
+                if let stringRep = reps.first(where: { $0.pasteboardType == .string }) {
                     pasteboard.declareTypes([.string], owner: nil)
-                    pasteboard.setString(finalText, forType: .string)
-                } else if asPlainText {
-                    // asPlainText だが string rep がない場合
-                    pasteboard.declareTypes([.string], owner: nil)
-                    pasteboard.setData(Data(), forType: .string)
-                } else {
-                    // 変数展開が必要だが string がない → 通常復元
-                    let types = reps.map(\.pasteboardType)
-                    pasteboard.declareTypes(types, owner: nil)
-                    for rep in reps {
-                        pasteboard.setData(rep.data, forType: rep.pasteboardType)
-                    }
+                    pasteboard.setData(stringRep.data, forType: .string)
                 }
             } else {
                 let types = reps.map(\.pasteboardType)
