@@ -168,17 +168,14 @@ final class ClipboardManager: @unchecked Sendable {
         }
         lastChangeCount = NSPasteboard.general.changeCount
 
-        // ピン留めアイテムは並べ替えしない
-        if !item.isPinned {
-            DispatchQueue.main.async { [weak self] in
-                guard let self else { return }
-                if let index = self.items.firstIndex(where: { $0.id == item.id }) {
-                    let moved = self.items.remove(at: index)
-                    let firstUnpinnedIndex = self.items.firstIndex(where: { !$0.isPinned }) ?? self.items.count
-                    self.items.insert(moved, at: firstUnpinnedIndex)
-                }
-                self.store.saveIndex(self.items)
+        // 使用したアイテムを先頭に移動
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            if let index = self.items.firstIndex(where: { $0.id == item.id }) {
+                let moved = self.items.remove(at: index)
+                self.items.insert(moved, at: 0)
             }
+            self.store.saveIndex(self.items)
         }
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
