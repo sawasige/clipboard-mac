@@ -88,13 +88,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         filterItem.image = NSImage(systemSymbolName: "line.3.horizontal.decrease.circle", accessibilityDescription: nil)
         tabVC.addTabViewItem(filterItem)
 
-        let variablesItem = NSTabViewItem(viewController: NSHostingController(
-            rootView: VariablesTab().formStyle(.grouped)
-        ))
-        variablesItem.label = String(localized: "Variables")
-        variablesItem.image = NSImage(systemSymbolName: "curlybraces", accessibilityDescription: nil)
-        tabVC.addTabViewItem(variablesItem)
-
         let window = NSWindow(contentViewController: tabVC)
         window.styleMask = [.titled, .closable]
         window.center()
