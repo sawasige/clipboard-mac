@@ -61,6 +61,13 @@
     <sparkle:shortVersionString>1.1.6</sparkle:shortVersionString>
     <enclosure url="https://github.com/sawasige/clipnyx/releases/download/v1.1.6/Clipnyx.dmg" length="4582848" type="application/octet-stream" sparkle:edSignature="m63AQN9n6RG/sXs5VZfrF1OR6nqaoSb55ZBkJ7eSV95r1O8tkTTa6hGtrEp45yso//Lk4UEcQ8pXQXL7XJiODg==" />
   </item>
+        <item>
+    <title>1.2.0</title>
+    <pubDate>Fri, 20 Mar 2026 09:55:09 +0000</pubDate>
+    <sparkle:version>14</sparkle:version>
+    <sparkle:shortVersionString>1.2.0</sparkle:shortVersionString>
+    <enclosure url="https://github.com/sawasige/clipnyx/releases/download/v1.2.0/Clipnyx.dmg" length="4562366" type="application/octet-stream" sparkle:edSignature="wS5WuEviuY0AkF0Y3VruaiEb20VP9fnDR+Bj6PCHYiuWs2M+xJKkBbhkYEQy3S/XZVoELu4jT20rE1w5cEJNCQ==" />
+  </item>
     <!-- Items are prepended by CI on each release -->
   </channel>
 </rss>
