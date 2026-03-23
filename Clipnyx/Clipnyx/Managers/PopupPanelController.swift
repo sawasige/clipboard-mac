@@ -19,6 +19,7 @@ final class PopupPanelController {
     private var panel: NSPanel?
     private var previousApp: NSRunningApplication?
     private var clickMonitor: Any?
+    private var appActivationObserver: NSObjectProtocol?
     var isVisible: Bool = false
 
     init() {
@@ -90,12 +91,17 @@ final class PopupPanelController {
         panel.setFrameOrigin(panelOrigin)
         panel.makeKeyAndOrderFront(nil)
         setupClickMonitor()
+        setupAppActivationObserver()
     }
 
     func close(restoreFocus: Bool = true) {
         if let monitor = clickMonitor {
             NSEvent.removeMonitor(monitor)
             clickMonitor = nil
+        }
+        if let observer = appActivationObserver {
+            NSWorkspace.shared.notificationCenter.removeObserver(observer)
+            appActivationObserver = nil
         }
         panel?.orderOut(nil)
         panel = nil
@@ -164,6 +170,23 @@ final class PopupPanelController {
         guard clickMonitor == nil else { return }
         clickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
             self?.close()
+        }
+    }
+
+    private func setupAppActivationObserver() {
+        guard appActivationObserver == nil else { return }
+        let currentApp = previousApp
+        appActivationObserver = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didActivateApplicationNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            guard let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication else { return }
+            // パネル表示時にアクティブだったアプリの通知は無視
+            if app.processIdentifier == currentApp?.processIdentifier { return }
+            MainActor.assumeIsolated {
+                self?.close(restoreFocus: false)
+            }
         }
     }
 }
