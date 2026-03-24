@@ -7,6 +7,13 @@ struct SnippetManagerView: View {
     @State private var newCategoryName = ""
     @State private var renamingCategoryId: UUID?
     @State private var renamingText = ""
+    @FocusState private var isRenamingFocused: Bool
+    @FocusState private var focusedArea: FocusArea?
+
+    enum FocusArea: Hashable {
+        case sidebar
+        case detail
+    }
 
     enum CategoryFilter: Hashable {
         case all
@@ -43,6 +50,30 @@ struct SnippetManagerView: View {
         .onChange(of: selectedCategoryFilter) { _, _ in
             selectedItemId = nil
         }
+        .background {
+            // Delete: Backspaceキーで選択中カテゴリを削除（サイドバーフォーカス時のみ）
+            Button("") {
+                guard focusedArea == .sidebar else { return }
+                if case .category(let id) = selectedCategoryFilter {
+                    clipboardManager.deleteSnippetCategory(id: id)
+                    selectedCategoryFilter = .all
+                }
+            }
+            .keyboardShortcut(.delete, modifiers: [])
+            .hidden()
+
+            // Return: 選択中カテゴリの名前編集（サイドバーフォーカス時のみ）
+            Button("") {
+                guard focusedArea == .sidebar else { return }
+                if case .category(let id) = selectedCategoryFilter,
+                   let cat = clipboardManager.snippetCategories.first(where: { $0.id == id }) {
+                    renamingText = cat.name
+                    renamingCategoryId = id
+                }
+            }
+            .keyboardShortcut(.return, modifiers: [])
+            .hidden()
+        }
     }
 
     // MARK: - Sidebar
@@ -58,10 +89,19 @@ struct SnippetManagerView: View {
                 ForEach(clipboardManager.snippetCategories.sorted(by: { $0.order < $1.order })) { cat in
                     if renamingCategoryId == cat.id {
                         TextField("", text: $renamingText, onCommit: {
-                            clipboardManager.renameSnippetCategory(id: cat.id, name: renamingText)
+                            if !renamingText.isEmpty {
+                                clipboardManager.renameSnippetCategory(id: cat.id, name: renamingText)
+                            }
                             renamingCategoryId = nil
+                            isRenamingFocused = false
                         })
                         .textFieldStyle(.roundedBorder)
+                        .focused($isRenamingFocused)
+                        .onAppear { isRenamingFocused = true }
+                        .onExitCommand {
+                            renamingCategoryId = nil
+                            isRenamingFocused = false
+                        }
                     } else {
                         Label(cat.name, systemImage: "tag")
                             .tag(CategoryFilter.category(cat.id))
@@ -84,9 +124,17 @@ struct SnippetManagerView: View {
                     }
                     clipboardManager.reorderSnippetCategories(sorted)
                 }
+                .onDelete { offsets in
+                    let sorted = clipboardManager.snippetCategories.sorted(by: { $0.order < $1.order })
+                    for index in offsets {
+                        clipboardManager.deleteSnippetCategory(id: sorted[index].id)
+                    }
+                }
             }
         }
         .listStyle(.sidebar)
+        .focusable()
+        .focused($focusedArea, equals: .sidebar)
         .safeAreaInset(edge: .bottom) {
             HStack {
                 TextField("New Category", text: $newCategoryName)
@@ -141,14 +189,6 @@ struct SnippetManagerView: View {
                     }
                     .frame(minHeight: 36)
                     .tag(item.id)
-                    .contextMenu {
-                        Button("Delete", role: .destructive) {
-                            clipboardManager.removeItem(item)
-                            if selectedItemId == item.id {
-                                selectedItemId = nil
-                            }
-                        }
-                    }
                 }
             }
         }
