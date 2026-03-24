@@ -20,6 +20,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var popupController = PopupPanelController()
     private var settingsWindow: NSWindow?
     private var snippetEditorWindow: NSWindow?
+    private var snippetManagerWindow: NSWindow?
     #if ENABLE_SPARKLE
     let updateManager = UpdateManager()
     #endif
@@ -53,8 +54,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         )
         NotificationCenter.default.addObserver(
             self,
-            selector: #selector(handleCreateNewSnippet),
-            name: .createNewSnippet,
+            selector: #selector(handleOpenSnippetManager(_:)),
+            name: .openSnippetManager,
             object: nil
         )
     }
@@ -73,12 +74,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         showSnippetEditor(item: item)
     }
 
-    @objc private func handleCreateNewSnippet() {
-        showSnippetEditor(item: nil)
+    @objc private func handleOpenSnippetManager(_ notification: Notification) {
+        let item = notification.object as? ClipboardItem
+        showSnippetManager(selectItem: item)
     }
 
+    // MARK: - Snippet Editor (single item)
+
     private func showSnippetEditor(item: ClipboardItem?) {
-        // ペーストパネルを閉じる
         popupController.close(restoreFocus: false)
 
         if let snippetEditorWindow {
@@ -110,8 +113,45 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.activate(ignoringOtherApps: true)
     }
 
+    // MARK: - Snippet Manager
+
+    private func showSnippetManager(selectItem: ClipboardItem?) {
+        popupController.close(restoreFocus: false)
+
+        if let snippetManagerWindow {
+            snippetManagerWindow.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            // TODO: select item if provided
+            return
+        }
+
+        let managerView = SnippetManagerView(clipboardManager: clipboardManager)
+        if let selectItem {
+            managerView.selectedItemId = selectItem.id
+            if let catId = selectItem.snippetCategoryId {
+                managerView.selectedCategoryFilter = .category(catId)
+            }
+        }
+
+        let window = NSWindow(
+            contentViewController: NSHostingController(rootView: managerView)
+        )
+        window.styleMask = [.titled, .closable, .resizable]
+        window.title = String(localized: "Manage Snippets")
+        window.setContentSize(NSSize(width: 800, height: 500))
+        window.isReleasedWhenClosed = false
+        self.snippetManagerWindow = window
+
+        window.delegate = self
+        window.center()
+        window.makeKeyAndOrderFront(nil)
+        NSApp.setActivationPolicy(.regular)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
+    // MARK: - Settings
+
     @objc private func handleShowSettings() {
-        // MenuBarExtra パネルを閉じる
         for window in NSApp.windows where window is NSPanel && window.isVisible {
             window.orderOut(nil)
         }
@@ -146,13 +186,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         historyItem.image = NSImage(systemSymbolName: "clock", accessibilityDescription: nil)
         tabVC.addTabViewItem(historyItem)
 
-        let snippetsItem = NSTabViewItem(viewController: NSHostingController(
-            rootView: SnippetsTab(clipboardManager: clipboardManager).formStyle(.grouped)
-        ))
-        snippetsItem.label = String(localized: "Snippets")
-        snippetsItem.image = NSImage(systemSymbolName: "tag", accessibilityDescription: nil)
-        tabVC.addTabViewItem(snippetsItem)
-
         let filterItem = NSTabViewItem(viewController: NSHostingController(
             rootView: FilterTab(clipboardManager: clipboardManager).formStyle(.grouped)
         ))
@@ -180,9 +213,10 @@ extension AppDelegate: NSWindowDelegate {
             settingsWindow = nil
         } else if window === snippetEditorWindow {
             snippetEditorWindow = nil
+        } else if window === snippetManagerWindow {
+            snippetManagerWindow = nil
         }
-        // 両方閉じたらDock/CmdTabから消す
-        if settingsWindow == nil && snippetEditorWindow == nil {
+        if settingsWindow == nil && snippetEditorWindow == nil && snippetManagerWindow == nil {
             NSApp.setActivationPolicy(.accessory)
         }
     }
@@ -193,5 +227,5 @@ extension Notification.Name {
     static let openPopupPanel = Notification.Name("openPopupPanel")
     static let closePopupPanel = Notification.Name("closePopupPanel")
     static let openSnippetEditor = Notification.Name("openSnippetEditor")
-    static let createNewSnippet = Notification.Name("createNewSnippet")
+    static let openSnippetManager = Notification.Name("openSnippetManager")
 }

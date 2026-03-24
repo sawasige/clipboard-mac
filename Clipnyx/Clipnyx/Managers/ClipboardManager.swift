@@ -172,11 +172,18 @@ final class ClipboardManager: @unchecked Sendable {
         store.saveIndex(items)
     }
 
-    func updateSnippet(_ item: ClipboardItem, name: String?, categoryId: UUID?) {
+    func updateSnippetName(_ item: ClipboardItem, name: String) {
         guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
         var updated = items
-        if let name { updated[index].snippetName = name.isEmpty ? nil : name }
-        if let categoryId { updated[index].snippetCategoryId = categoryId }
+        updated[index].snippetName = name.isEmpty ? nil : name
+        items = updated
+        store.saveIndex(items)
+    }
+
+    func updateSnippetCategory(_ item: ClipboardItem, categoryId: UUID?) {
+        guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
+        var updated = items
+        updated[index].snippetCategoryId = categoryId
         items = updated
         store.saveIndex(items)
     }

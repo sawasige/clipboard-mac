@@ -159,7 +159,8 @@ struct SnippetEditorView: View {
             if !item.isSaved {
                 clipboardManager.toggleSave(item)
             }
-            clipboardManager.updateSnippet(item, name: name, categoryId: selectedCategoryId)
+            clipboardManager.updateSnippetName(item, name: name)
+            clipboardManager.updateSnippetCategory(item, categoryId: selectedCategoryId)
             if !text.isEmpty {
                 clipboardManager.updateSnippetContent(item, text: text)
             }

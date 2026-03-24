@@ -82,6 +82,12 @@ struct HistoryTab: View {
             }
 
             Section {
+                Button("Manage Snippets") {
+                    NotificationCenter.default.post(name: .openSnippetManager, object: nil)
+                }
+            }
+
+            Section {
                 Button("Delete History", role: .destructive) {
                     clipboardManager.removeAllItems()
                 }
@@ -203,58 +209,6 @@ private struct HotKeyRecorderRow: View {
         guard isRecording else { return }
         isRecording = false
         HotKeyManager.shared.register()
-    }
-}
-
-// MARK: - Snippets Tab
-
-struct SnippetsTab: View {
-    @Bindable var clipboardManager: ClipboardManager
-    @State private var newCategoryName = ""
-
-    var body: some View {
-        Form {
-            Section("Snippet Categories") {
-                if clipboardManager.snippetCategories.isEmpty {
-                    Text("No categories yet. Add one to organize your snippets.")
-                        .foregroundStyle(.secondary)
-                } else {
-                    let sorted = clipboardManager.snippetCategories.sorted(by: { $0.order < $1.order })
-                    ForEach(sorted) { category in
-                        HStack {
-                            TextField("Category Name", text: Binding(
-                                get: { clipboardManager.snippetCategories.first(where: { $0.id == category.id })?.name ?? "" },
-                                set: { clipboardManager.renameSnippetCategory(id: category.id, name: $0) }
-                            ))
-                            .textFieldStyle(.roundedBorder)
-
-                            let count = clipboardManager.items.filter { $0.snippetCategoryId == category.id }.count
-                            Text("\(count)")
-                                .foregroundStyle(.secondary)
-
-                            Button(role: .destructive) {
-                                clipboardManager.deleteSnippetCategory(id: category.id)
-                            } label: {
-                                Image(systemName: "trash")
-                            }
-                            .buttonStyle(.plain)
-                            .foregroundStyle(.red)
-                        }
-                    }
-                }
-
-                HStack {
-                    TextField("New Category", text: $newCategoryName)
-                        .textFieldStyle(.roundedBorder)
-                    Button("Add Category") {
-                        guard !newCategoryName.isEmpty else { return }
-                        _ = clipboardManager.addSnippetCategory(name: newCategoryName)
-                        newCategoryName = ""
-                    }
-                    .disabled(newCategoryName.isEmpty)
-                }
-            }
-        }
     }
 }
 

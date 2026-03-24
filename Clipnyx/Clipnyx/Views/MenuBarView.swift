@@ -18,9 +18,9 @@ struct MenuBarView: View {
             Divider()
 
             Button {
-                NotificationCenter.default.post(name: .createNewSnippet, object: nil)
+                NotificationCenter.default.post(name: .openSnippetManager, object: nil)
             } label: {
-                Label("New Snippet", systemImage: "plus.square")
+                Label("Manage Snippets", systemImage: "bookmark")
             }
 
             Divider()
