@@ -16,6 +16,10 @@ final class ClipboardStore: Sendable {
         baseURL.appendingPathComponent("blobs", isDirectory: true)
     }()
 
+    private static let snippetCategoriesURL: URL = {
+        baseURL.appendingPathComponent("snippet_categories.json")
+    }()
+
     // MARK: - Index Codable Types
 
     private struct IndexEntry: Codable {
@@ -27,7 +31,12 @@ final class ClipboardStore: Sendable {
         let totalDataSize: Int
         let contentHash: Data
         let representationInfos: [RepInfoEntry]
+        // Legacy field (read-only for migration)
         let isPinned: Bool?
+        // New fields
+        let isSaved: Bool?
+        let snippetName: String?
+        let snippetCategoryId: UUID?
     }
 
     private struct RepInfoEntry: Codable {
@@ -53,7 +62,10 @@ final class ClipboardStore: Sendable {
                 totalDataSize: item.totalDataSize,
                 contentHash: item.contentHash,
                 representationInfos: item.representationInfos.map { RepInfoEntry(type: $0.type, size: $0.size) },
-                isPinned: item.isPinned
+                isPinned: nil,
+                isSaved: item.isSaved,
+                snippetName: item.snippetName,
+                snippetCategoryId: item.snippetCategoryId
             )
         }
         writeQueue.async {
@@ -126,7 +138,9 @@ final class ClipboardStore: Sendable {
                     totalDataSize: entry.totalDataSize,
                     contentHash: entry.contentHash,
                     representationInfos: entry.representationInfos.map { RepresentationInfo(type: $0.type, size: $0.size) },
-                    isPinned: entry.isPinned ?? false
+                    isSaved: entry.isSaved ?? entry.isPinned ?? false,
+                    snippetName: entry.snippetName,
+                    snippetCategoryId: entry.snippetCategoryId
                 )
             }
         } catch {
@@ -174,6 +188,31 @@ final class ClipboardStore: Sendable {
             let fm = FileManager.default
             try? fm.removeItem(at: Self.indexURL)
             try? fm.removeItem(at: Self.blobsURL)
+        }
+    }
+
+    // MARK: - Snippet Categories
+
+    func saveSnippetCategories(_ categories: [SnippetCategory]) {
+        writeQueue.async {
+            do {
+                try FileManager.default.createDirectory(at: Self.baseURL, withIntermediateDirectories: true)
+                let data = try JSONEncoder().encode(categories)
+                try data.write(to: Self.snippetCategoriesURL, options: .atomic)
+            } catch {
+                print("Failed to save snippet categories: \(error)")
+            }
+        }
+    }
+
+    func loadSnippetCategories() -> [SnippetCategory] {
+        guard FileManager.default.fileExists(atPath: Self.snippetCategoriesURL.path) else { return [] }
+        do {
+            let data = try Data(contentsOf: Self.snippetCategoriesURL)
+            return try JSONDecoder().decode([SnippetCategory].self, from: data)
+        } catch {
+            print("Failed to load snippet categories: \(error)")
+            return []
         }
     }
 

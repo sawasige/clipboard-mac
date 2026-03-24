@@ -18,6 +18,14 @@ struct MenuBarView: View {
             Divider()
 
             Button {
+                NotificationCenter.default.post(name: .createNewSnippet, object: nil)
+            } label: {
+                Label("New Snippet", systemImage: "plus.square")
+            }
+
+            Divider()
+
+            Button {
                 clipboardManager.isPaused.toggle()
             } label: {
                 Label(

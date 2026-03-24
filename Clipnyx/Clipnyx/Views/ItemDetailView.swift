@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ItemDetailView: View {
     let item: ClipboardItem
+    var clipboardManager: ClipboardManager? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -12,6 +13,18 @@ struct ItemDetailView: View {
                 Text(item.category.label)
                     .font(.headline)
                 Spacer()
+            }
+
+            if let snippetName = item.snippetName {
+                LabeledContent("Snippet") {
+                    Text(snippetName)
+                }
+                if let categoryId = item.snippetCategoryId,
+                   let category = clipboardManager?.snippetCategories.first(where: { $0.id == categoryId }) {
+                    LabeledContent("Snippet Category") {
+                        Text(category.name)
+                    }
+                }
             }
 
             Divider()

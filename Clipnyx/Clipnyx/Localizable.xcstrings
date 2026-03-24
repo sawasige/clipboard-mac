@@ -1,6 +1,9 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "" : {
+
+    },
     "(Color)" : {
       "localizations" : {
         "ja" : {
@@ -101,12 +104,12 @@
         }
       }
     },
-    "%lld items (%lld pinned)" : {
+    "%lld items (%lld saved)" : {
       "localizations" : {
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$lld 件（%2$lld 件ピン留め）"
+            "value" : "%1$lld 件（%2$lld 件保存済み）"
           }
         }
       }
@@ -142,6 +145,26 @@
         }
       }
     },
+    "Add" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "追加"
+          }
+        }
+      }
+    },
+    "Add Category" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "カテゴリを追加"
+          }
+        }
+      }
+    },
     "All" : {
       "localizations" : {
         "ja" : {
@@ -173,6 +196,16 @@
         }
       }
     },
+    "Cancel" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "キャンセル"
+          }
+        }
+      }
+    },
     "Category" : {
       "localizations" : {
         "ja" : {
@@ -189,6 +222,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "カテゴリフィルタ"
+          }
+        }
+      }
+    },
+    "Category Name" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "カテゴリ名"
           }
         }
       }
@@ -224,6 +267,16 @@
         }
       }
     },
+    "Content" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "コンテンツ"
+          }
+        }
+      }
+    },
     "Copied At" : {
       "localizations" : {
         "ja" : {
@@ -240,6 +293,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "コピーした内容がここに表示されます"
+          }
+        }
+      }
+    },
+    "Create" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "作成"
           }
         }
       }
@@ -330,6 +393,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "無効にしたカテゴリのコピーは記録されません。"
+          }
+        }
+      }
+    },
+    "Edit Snippet" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スニペットを編集"
           }
         }
       }
@@ -464,6 +537,36 @@
         }
       }
     },
+    "New Category" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新しいカテゴリ"
+          }
+        }
+      }
+    },
+    "New Snippet" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新規スニペット"
+          }
+        }
+      }
+    },
+    "No categories yet. Add one to organize your snippets." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "カテゴリがありません。スニペットを整理するために追加してください。"
+          }
+        }
+      }
+    },
     "No History" : {
       "localizations" : {
         "ja" : {
@@ -474,22 +577,32 @@
         }
       }
     },
-    "No Pinned Items" : {
-      "localizations" : {
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ピン留めなし"
-          }
-        }
-      }
-    },
     "No results found" : {
       "localizations" : {
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "検索結果が見つかりません"
+          }
+        }
+      }
+    },
+    "No Saved Items" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存済みなし"
+          }
+        }
+      }
+    },
+    "None" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "なし"
           }
         }
       }
@@ -554,46 +667,6 @@
         }
       }
     },
-    "Pin" : {
-      "localizations" : {
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ピン留め"
-          }
-        }
-      }
-    },
-    "Pin items to keep them here" : {
-      "localizations" : {
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "アイテムをピン留めするとここに表示されます"
-          }
-        }
-      }
-    },
-    "Pinned items will not be deleted." : {
-      "localizations" : {
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ピン留めしたアイテムは削除されません。"
-          }
-        }
-      }
-    },
-    "Pinned Only" : {
-      "localizations" : {
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ピン留めのみ"
-          }
-        }
-      }
-    },
     "Plain Text" : {
       "localizations" : {
         "ja" : {
@@ -634,6 +707,26 @@
         }
       }
     },
+    "Register" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "登録"
+          }
+        }
+      }
+    },
+    "Register as Snippet" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スニペットに登録"
+          }
+        }
+      }
+    },
     "Resume Monitoring" : {
       "localizations" : {
         "ja" : {
@@ -650,6 +743,46 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "リッチテキスト"
+          }
+        }
+      }
+    },
+    "Save" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存"
+          }
+        }
+      }
+    },
+    "Save items to keep them here" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アイテムを保存するとここに表示されます"
+          }
+        }
+      }
+    },
+    "Saved items will not be deleted." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存済みアイテムは削除されません。"
+          }
+        }
+      }
+    },
+    "Saved Only" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存済みのみ"
           }
         }
       }
@@ -694,6 +827,56 @@
         }
       }
     },
+    "Snippet" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スニペット"
+          }
+        }
+      }
+    },
+    "Snippet Categories" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スニペットカテゴリ"
+          }
+        }
+      }
+    },
+    "Snippet Category" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スニペットカテゴリ"
+          }
+        }
+      }
+    },
+    "Snippet Name" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スニペット名"
+          }
+        }
+      }
+    },
+    "Snippets" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スニペット"
+          }
+        }
+      }
+    },
     "Software Update" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -725,12 +908,12 @@
         }
       }
     },
-    "Unpin" : {
+    "Unsave" : {
       "localizations" : {
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ピン解除"
+            "value" : "保存解除"
           }
         }
       }

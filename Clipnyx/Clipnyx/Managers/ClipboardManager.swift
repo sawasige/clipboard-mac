@@ -5,6 +5,7 @@ import Observation
 final class ClipboardManager: @unchecked Sendable {
     var items: [ClipboardItem] = []
     var isPaused: Bool = false
+    var snippetCategories: [SnippetCategory] = []
 
     var maxHistoryCount: Int {
         didSet { UserDefaults.standard.set(maxHistoryCount, forKey: "maxHistoryCount") }
@@ -21,7 +22,7 @@ final class ClipboardManager: @unchecked Sendable {
     private(set) var isRestoringItem: Bool = false
     private var lastChangeCount: Int = 0
     private var pollingTimer: Timer?
-    private let store = ClipboardStore()
+    let store = ClipboardStore()
 
     init() {
         maxHistoryCount = UserDefaults.standard.object(forKey: "maxHistoryCount") as? Int ?? 50
@@ -32,6 +33,7 @@ final class ClipboardManager: @unchecked Sendable {
             excludedCategories = []
         }
         items = store.loadIndex()
+        snippetCategories = store.loadSnippetCategories()
         store.cleanupOrphans(validIDs: Set(items.map(\.id)))
         lastChangeCount = NSPasteboard.general.changeCount
         startPolling()
@@ -74,24 +76,23 @@ final class ClipboardManager: @unchecked Sendable {
     // MARK: - Item Management
 
     private func addItem(_ newItem: ClipboardItem, representations: [PasteboardRepresentation]) {
-        // ピン留めアイテムの重複は除外しない
-        let duplicateIDs = items.filter { !$0.isPinned && $0.hasSameContent(as: newItem) }.map(\.id)
+        // 保存済みアイテムの重複は除外しない
+        let duplicateIDs = items.filter { !$0.isSaved && $0.hasSameContent(as: newItem) }.map(\.id)
 
-        // Remove duplicates (unpinned only)
-        items.removeAll { !$0.isPinned && $0.hasSameContent(as: newItem) }
+        // Remove duplicates (unsaved only)
+        items.removeAll { !$0.isSaved && $0.hasSameContent(as: newItem) }
 
         // Insert at front
         items.insert(newItem, at: 0)
 
-        // Enforce count limit (unpinned only)
+        // Enforce count limit (unsaved only)
         var removedIDs = duplicateIDs
-        let unpinnedCount = items.filter({ !$0.isPinned }).count
-        if unpinnedCount > maxHistoryCount {
-            // 末尾から unpinned を削除
-            var removeCount = unpinnedCount - maxHistoryCount
+        let unsavedCount = items.filter({ !$0.isSaved }).count
+        if unsavedCount > maxHistoryCount {
+            var removeCount = unsavedCount - maxHistoryCount
             var i = items.count - 1
             while i >= 0, removeCount > 0 {
-                if !items[i].isPinned {
+                if !items[i].isSaved {
                     removedIDs.append(items[i].id)
                     items.remove(at: i)
                     removeCount -= 1
@@ -100,12 +101,12 @@ final class ClipboardManager: @unchecked Sendable {
             }
         }
 
-        // Enforce total size limit (unpinned only)
+        // Enforce total size limit (unsaved only)
         let maxBytes = maxTotalSizeMB * 1024 * 1024
-        while items.filter({ !$0.isPinned }).count > 1, totalDataSize > maxBytes {
-            if let lastUnpinnedIndex = items.lastIndex(where: { !$0.isPinned }) {
-                removedIDs.append(items[lastUnpinnedIndex].id)
-                items.remove(at: lastUnpinnedIndex)
+        while items.filter({ !$0.isSaved }).count > 1, totalDataSize > maxBytes {
+            if let lastUnsavedIndex = items.lastIndex(where: { !$0.isSaved }) {
+                removedIDs.append(items[lastUnsavedIndex].id)
+                items.remove(at: lastUnsavedIndex)
             } else {
                 break
             }
@@ -126,22 +127,135 @@ final class ClipboardManager: @unchecked Sendable {
     }
 
     func removeAllItems() {
-        // ピン留めアイテムは残す
-        let pinned = items.filter(\.isPinned)
-        let removedIDs = items.filter { !$0.isPinned }.map(\.id)
-        items = pinned
+        // 保存済みアイテムは残す
+        let saved = items.filter(\.isSaved)
+        let removedIDs = items.filter { !$0.isSaved }.map(\.id)
+        items = saved
         store.saveIndex(items)
         if !removedIDs.isEmpty {
             store.deleteBlobs(for: removedIDs)
         }
     }
 
-    // MARK: - Pin
+    // MARK: - Save (replaces Pin)
 
-    func togglePin(_ item: ClipboardItem) {
+    func toggleSave(_ item: ClipboardItem) {
         guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
-        items[index].isPinned.toggle()
+        var updated = items
+        updated[index].isSaved.toggle()
+        if !updated[index].isSaved {
+            updated[index].snippetName = nil
+            updated[index].snippetCategoryId = nil
+        }
+        items = updated
         store.saveIndex(items)
+    }
+
+    // MARK: - Snippet
+
+    func registerAsSnippet(_ item: ClipboardItem, name: String, categoryId: UUID) {
+        guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
+        var updated = items
+        updated[index].isSaved = true
+        updated[index].snippetName = name
+        updated[index].snippetCategoryId = categoryId
+        items = updated
+        store.saveIndex(items)
+    }
+
+    func removeFromSnippets(_ item: ClipboardItem) {
+        guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
+        var updated = items
+        updated[index].snippetName = nil
+        updated[index].snippetCategoryId = nil
+        items = updated
+        store.saveIndex(items)
+    }
+
+    func updateSnippet(_ item: ClipboardItem, name: String?, categoryId: UUID?) {
+        guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
+        var updated = items
+        if let name { updated[index].snippetName = name.isEmpty ? nil : name }
+        if let categoryId { updated[index].snippetCategoryId = categoryId }
+        items = updated
+        store.saveIndex(items)
+    }
+
+    func updateSnippetContent(_ item: ClipboardItem, text: String) {
+        guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
+        let current = items[index]
+        items[index] = ClipboardItem(
+            id: current.id,
+            timestamp: current.timestamp,
+            category: current.category,
+            previewText: String(text.prefix(500)),
+            thumbnailData: current.thumbnailData,
+            totalDataSize: text.utf8.count,
+            contentHash: current.contentHash,
+            representationInfos: [RepresentationInfo(type: NSPasteboard.PasteboardType.string.rawValue, size: text.utf8.count)],
+            isSaved: current.isSaved,
+            snippetName: current.snippetName,
+            snippetCategoryId: current.snippetCategoryId
+        )
+        // Blob を更新
+        let rep = PasteboardRepresentation(type: .string, data: Data(text.utf8))
+        store.saveBlobs(for: item.id, representations: [rep], thumbnail: nil)
+        store.saveIndex(items)
+    }
+
+    func createSnippet(text: String, name: String, categoryId: UUID?) {
+        let id = UUID()
+        let item = ClipboardItem(
+            id: id,
+            timestamp: Date(),
+            category: .plainText,
+            previewText: String(text.prefix(500)),
+            thumbnailData: nil,
+            totalDataSize: text.utf8.count,
+            contentHash: Data(),
+            representationInfos: [RepresentationInfo(type: NSPasteboard.PasteboardType.string.rawValue, size: text.utf8.count)],
+            isSaved: true,
+            snippetName: name,
+            snippetCategoryId: categoryId
+        )
+        items.insert(item, at: 0)
+        let rep = PasteboardRepresentation(type: .string, data: Data(text.utf8))
+        store.saveBlobs(for: id, representations: [rep], thumbnail: nil)
+        store.saveIndex(items)
+    }
+
+    // MARK: - Snippet Categories
+
+    func addSnippetCategory(name: String) -> SnippetCategory {
+        let maxOrder = snippetCategories.max(by: { $0.order < $1.order })?.order ?? -1
+        let category = SnippetCategory(name: name, order: maxOrder + 1)
+        snippetCategories.append(category)
+        store.saveSnippetCategories(snippetCategories)
+        return category
+    }
+
+    func renameSnippetCategory(id: UUID, name: String) {
+        guard let index = snippetCategories.firstIndex(where: { $0.id == id }) else { return }
+        var updated = snippetCategories
+        updated[index].name = name
+        snippetCategories = updated
+        store.saveSnippetCategories(snippetCategories)
+    }
+
+    func deleteSnippetCategory(id: UUID) {
+        snippetCategories.removeAll { $0.id == id }
+        store.saveSnippetCategories(snippetCategories)
+        // 該当カテゴリのアイテムからスニペット属性をクリア（isSavedは維持）
+        for i in items.indices where items[i].snippetCategoryId == id {
+            items[i].snippetName = nil
+            items[i].snippetCategoryId = nil
+        }
+        store.saveIndex(items)
+    }
+
+    func reorderSnippetCategories(_ categories: [SnippetCategory]) {
+        snippetCategories = categories
+        store.saveSnippetCategories(snippetCategories)
     }
 
     // MARK: - Restore
@@ -149,7 +263,6 @@ final class ClipboardManager: @unchecked Sendable {
     func restoreToClipboard(_ item: ClipboardItem, asPlainText: Bool = false) {
         isRestoringItem = true
 
-        // Load representations from disk and restore to pasteboard
         if let reps = store.loadRepresentations(for: item.id) {
             let pasteboard = NSPasteboard.general
             pasteboard.clearContents()

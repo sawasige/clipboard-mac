@@ -7,30 +7,29 @@ struct PopupContentView: View {
 
     @State private var searchText = ""
     @State private var selectedIndex = 0
-    /// キーボード操作中は onHover による選択更新とスクロール追従を切り替える。
-    /// キー入力で true、マウス移動で false。
     @State private var keyboardNavigation = true
-    /// マウスが実際に動いたかを判定するためのスクリーン座標。
-    /// onContinuousHover はビュー相対座標を返すため、layout shift（contentHeight 変化等）で
-    /// マウスが静止していても座標が変わる。NSEvent.mouseLocation（スクリーン座標）なら影響を受けない。
     @State private var lastScreenPosition: CGPoint?
     @State private var selectedCategory: ClipboardContentCategory?
-    @State private var showPinnedOnly = false
+    @State private var selectedSnippetCategory: UUID?
+    @State private var showSavedOnly = false
     @State private var listContentHeight: CGFloat = 0
     @State private var detailItem: ClipboardItem?
     @FocusState private var isSearchFocused: Bool
 
     private var filteredItems: [ClipboardItem] {
         var result = clipboardManager.items
-        if showPinnedOnly {
-            result = result.filter(\.isPinned)
+        if showSavedOnly {
+            result = result.filter(\.isSaved)
         }
-        if let category = selectedCategory {
+        if let snippetCategoryId = selectedSnippetCategory {
+            result = result.filter { $0.snippetCategoryId == snippetCategoryId }
+        } else if let category = selectedCategory {
             result = result.filter { $0.category == category }
         }
         if !searchText.isEmpty {
             result = result.filter {
                 $0.previewText.localizedCaseInsensitiveContains(searchText)
+                || ($0.snippetName?.localizedCaseInsensitiveContains(searchText) ?? false)
             }
         }
         return result
@@ -56,40 +55,70 @@ struct PopupContentView: View {
                     .buttonStyle(.plain)
                 }
 
-                // Pin filter
+                // Saved filter
                 Button {
-                    showPinnedOnly.toggle()
+                    showSavedOnly.toggle()
                     selectedIndex = 0
                 } label: {
-                    Image(systemName: showPinnedOnly ? "pin.fill" : "pin")
-                        .foregroundStyle(showPinnedOnly ? .orange : .secondary)
+                    Image(systemName: showSavedOnly ? "bookmark.fill" : "bookmark")
+                        .foregroundStyle(showSavedOnly ? .orange : .secondary)
                 }
                 .buttonStyle(.plain)
-                .help(showPinnedOnly ? Text("Show All") : Text("Pinned Only"))
+                .help(showSavedOnly ? Text("Show All") : Text("Saved Only"))
 
                 // Category filter
                 Menu {
                     Button {
                         selectedCategory = nil
+                        selectedSnippetCategory = nil
                     } label: {
                         Label(String(localized: "All"), systemImage: "tray.full")
                     }
                     Divider()
                     ForEach(activeCategories, id: \.self) { category in
                         Button {
-                            selectedCategory = selectedCategory == category ? nil : category
+                            if selectedCategory == category {
+                                selectedCategory = nil
+                            } else {
+                                selectedCategory = category
+                                selectedSnippetCategory = nil
+                            }
                         } label: {
                             Label(category.label, systemImage: category.icon)
                         }
                     }
+                    if !clipboardManager.snippetCategories.isEmpty {
+                        Divider()
+                        ForEach(clipboardManager.snippetCategories.sorted(by: { $0.order < $1.order })) { cat in
+                            Button {
+                                if selectedSnippetCategory == cat.id {
+                                    selectedSnippetCategory = nil
+                                } else {
+                                    selectedSnippetCategory = cat.id
+                                    selectedCategory = nil
+                                }
+                            } label: {
+                                Label(cat.name, systemImage: "tag")
+                            }
+                        }
+                    }
                 } label: {
-                    Image(systemName: selectedCategory != nil ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
-                        .foregroundStyle(selectedCategory != nil ? Color.accentColor : Color.secondary)
+                    Image(systemName: (selectedCategory != nil || selectedSnippetCategory != nil) ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
+                        .foregroundStyle((selectedCategory != nil || selectedSnippetCategory != nil) ? Color.accentColor : Color.secondary)
                 }
                 .menuStyle(.borderlessButton)
                 .fixedSize()
                 .help("Filter")
 
+                // New snippet
+                Button {
+                    NotificationCenter.default.post(name: .openSnippetEditor, object: nil)
+                } label: {
+                    Image(systemName: "plus")
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .help("New Snippet")
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
@@ -97,13 +126,9 @@ struct PopupContentView: View {
             Divider()
 
             historyContent
-
         }
         .background(Color(nsColor: .windowBackgroundColor))
         .clipShape(RoundedRectangle(cornerRadius: 12))
-        // マウスが実際に動いた時だけ keyboardNavigation を解除する。
-        // onContinuousHover のビュー相対座標は layout shift で変わるため、
-        // スクリーン座標（NSEvent.mouseLocation）で判定する。
         .onContinuousHover { phase in
             if case .active = phase {
                 let screenPos = NSEvent.mouseLocation
@@ -136,7 +161,7 @@ struct PopupContentView: View {
             selectedIndex = 0
         }
         .popover(item: $detailItem) { item in
-            ItemDetailView(item: item)
+            ItemDetailView(item: item, clipboardManager: clipboardManager)
         }
     }
 
@@ -146,10 +171,10 @@ struct PopupContentView: View {
     private var historyContent: some View {
         if filteredItems.isEmpty {
             ContentUnavailableView {
-                Label(showPinnedOnly ? "No Pinned Items" : "No History", systemImage: showPinnedOnly ? "pin.slash" : "clipboard")
+                Label(showSavedOnly ? "No Saved Items" : "No History", systemImage: showSavedOnly ? "bookmark.slash" : "clipboard")
             } description: {
-                if showPinnedOnly {
-                    Text("Pin items to keep them here")
+                if showSavedOnly {
+                    Text("Save items to keep them here")
                 } else if searchText.isEmpty {
                     Text("Copied content will appear here")
                 } else {
@@ -189,8 +214,8 @@ struct PopupContentView: View {
             item: item,
             index: index,
             isSelected: index == selectedIndex,
-            onPin: {
-                clipboardManager.togglePin(item)
+            onBookmark: {
+                NotificationCenter.default.post(name: .openSnippetEditor, object: item)
             },
             onSelect: {
                 selectedIndex = index
@@ -221,7 +246,6 @@ struct PopupContentView: View {
 
     // MARK: - Key Handling
 
-    /// IMEが未確定文字列を持っているかを判定する。
     private var isIMEComposing: Bool {
         guard let inputContext = NSTextInputContext.current else { return false }
         return inputContext.client.markedRange().length > 0
@@ -229,7 +253,7 @@ struct PopupContentView: View {
 
     private func handleKeyPress(_ press: KeyPress) -> KeyPress.Result {
         if press.key == .tab {
-            showPinnedOnly.toggle()
+            showSavedOnly.toggle()
             selectedIndex = 0
             return .handled
         }
@@ -308,7 +332,7 @@ private struct UnifiedItemRow: View {
     let item: ClipboardItem
     let index: Int
     let isSelected: Bool
-    let onPin: () -> Void
+    let onBookmark: () -> Void
     let onSelect: () -> Void
     let onShowDetail: () -> Void
     let onDelete: () -> Void
@@ -326,22 +350,28 @@ private struct UnifiedItemRow: View {
                 Spacer().frame(width: 16)
             }
 
-            // Category icon (with pin overlay)
+            // Category icon (with saved overlay)
             ZStack(alignment: .bottomTrailing) {
                 Image(systemName: item.category.icon)
                     .font(.callout)
                     .foregroundStyle(item.category.color)
                     .frame(width: 18)
 
-                if item.isPinned {
-                    Image(systemName: "pin.fill")
+                if item.isSaved {
+                    Image(systemName: "bookmark.fill")
                         .font(.system(size: 7))
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(item.isSnippet ? Color.accentColor : .orange)
                         .offset(x: 4, y: 2)
                 }
             }
 
             VStack(alignment: .leading, spacing: 2) {
+                if let snippetName = item.snippetName {
+                    Text(snippetName)
+                        .font(.callout.bold())
+                        .foregroundStyle(Color.accentColor)
+                        .lineLimit(1)
+                }
                 ItemPreviewContent(item: item, maxThumbnailHeight: 40)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -350,13 +380,13 @@ private struct UnifiedItemRow: View {
                 if isSelected {
                     HStack(spacing: 8) {
                         Button {
-                            onPin()
+                            onBookmark()
                         } label: {
-                            Image(systemName: item.isPinned ? "pin.slash" : "pin")
+                            Image(systemName: item.isSaved ? "bookmark.fill" : "bookmark")
                                 .font(.callout)
                         }
                         .buttonStyle(.plain)
-                        .foregroundStyle(item.isPinned ? .orange : .secondary)
+                        .foregroundStyle(item.isSaved ? .orange : .secondary)
 
                         Button {
                             onShowDetail()
@@ -405,9 +435,9 @@ private struct UnifiedItemRow: View {
             }
             Divider()
             Button {
-                onPin()
+                onBookmark()
             } label: {
-                Label(item.isPinned ? "Unpin" : "Pin", systemImage: item.isPinned ? "pin.slash" : "pin")
+                Label(item.isSaved ? "Unsave" : "Save", systemImage: item.isSaved ? "bookmark.slash" : "bookmark")
             }
             Button {
                 onShowDetail()

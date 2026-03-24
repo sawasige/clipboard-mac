@@ -19,6 +19,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let clipboardManager = ClipboardManager()
     private var popupController = PopupPanelController()
     private var settingsWindow: NSWindow?
+    private var snippetEditorWindow: NSWindow?
     #if ENABLE_SPARKLE
     let updateManager = UpdateManager()
     #endif
@@ -44,6 +45,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             name: .openPopupPanel,
             object: nil
         )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleOpenSnippetEditor(_:)),
+            name: .openSnippetEditor,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleCreateNewSnippet),
+            name: .createNewSnippet,
+            object: nil
+        )
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -53,6 +66,46 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func handleOpenPopupPanel() {
         popupController.toggle(clipboardManager: clipboardManager)
+    }
+
+    @objc private func handleOpenSnippetEditor(_ notification: Notification) {
+        let item = notification.object as? ClipboardItem
+        showSnippetEditor(item: item)
+    }
+
+    @objc private func handleCreateNewSnippet() {
+        showSnippetEditor(item: nil)
+    }
+
+    private func showSnippetEditor(item: ClipboardItem?) {
+        // ペーストパネルを閉じる
+        popupController.close(restoreFocus: false)
+
+        if let snippetEditorWindow {
+            snippetEditorWindow.close()
+        }
+
+        let editorView = SnippetEditorView(
+            clipboardManager: clipboardManager,
+            item: item,
+            onDismiss: { [weak self] in
+                self?.snippetEditorWindow?.close()
+                self?.snippetEditorWindow = nil
+            }
+        )
+
+        let window = NSWindow(
+            contentViewController: NSHostingController(rootView: editorView)
+        )
+        window.styleMask = [.titled, .closable, .resizable]
+        window.title = item != nil ? String(localized: "Edit Snippet") : String(localized: "New Snippet")
+        window.setContentSize(NSSize(width: 500, height: 400))
+        window.isReleasedWhenClosed = false
+        self.snippetEditorWindow = window
+
+        window.center()
+        window.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
     }
 
     @objc private func handleShowSettings() {
@@ -91,6 +144,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         historyItem.image = NSImage(systemSymbolName: "clock", accessibilityDescription: nil)
         tabVC.addTabViewItem(historyItem)
 
+        let snippetsItem = NSTabViewItem(viewController: NSHostingController(
+            rootView: SnippetsTab(clipboardManager: clipboardManager).formStyle(.grouped)
+        ))
+        snippetsItem.label = String(localized: "Snippets")
+        snippetsItem.image = NSImage(systemSymbolName: "tag", accessibilityDescription: nil)
+        tabVC.addTabViewItem(snippetsItem)
+
         let filterItem = NSTabViewItem(viewController: NSHostingController(
             rootView: FilterTab(clipboardManager: clipboardManager).formStyle(.grouped)
         ))
@@ -123,4 +183,6 @@ extension Notification.Name {
     static let openSettingsRequest = Notification.Name("openSettingsRequest")
     static let openPopupPanel = Notification.Name("openPopupPanel")
     static let closePopupPanel = Notification.Name("closePopupPanel")
+    static let openSnippetEditor = Notification.Name("openSnippetEditor")
+    static let createNewSnippet = Notification.Name("createNewSnippet")
 }
