@@ -103,8 +103,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         window.isReleasedWhenClosed = false
         self.snippetEditorWindow = window
 
+        window.delegate = self
         window.center()
         window.makeKeyAndOrderFront(nil)
+        NSApp.setActivationPolicy(.regular)
         NSApp.activate(ignoringOtherApps: true)
     }
 
@@ -173,9 +175,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
 extension AppDelegate: NSWindowDelegate {
     func windowWillClose(_ notification: Notification) {
-        guard (notification.object as? NSWindow) === settingsWindow else { return }
-        settingsWindow = nil
-        NSApp.setActivationPolicy(.accessory)
+        let window = notification.object as? NSWindow
+        if window === settingsWindow {
+            settingsWindow = nil
+        } else if window === snippetEditorWindow {
+            snippetEditorWindow = nil
+        }
+        // 両方閉じたらDock/CmdTabから消す
+        if settingsWindow == nil && snippetEditorWindow == nil {
+            NSApp.setActivationPolicy(.accessory)
+        }
     }
 }
 
