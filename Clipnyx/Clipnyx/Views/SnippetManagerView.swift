@@ -175,7 +175,8 @@ struct FavoriteManagerView: View {
                         VStack(alignment: .leading, spacing: 3) {
                             if let name = item.favoriteName, !name.isEmpty {
                                 Text(name)
-                                    .font(.body.bold())
+                                    .font(.callout.bold())
+                                    .foregroundStyle(Color.accentColor)
                                     .lineLimit(1)
                             }
                             ItemPreviewContent(item: item, maxThumbnailHeight: 30)
