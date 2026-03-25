@@ -231,6 +231,27 @@ final class ClipboardManager: @unchecked Sendable {
         store.saveIndex(items)
     }
 
+    func addTextToHistory(text: String) {
+        let id = UUID()
+        let item = ClipboardItem(
+            id: id,
+            timestamp: Date(),
+            category: .plainText,
+            previewText: String(text.prefix(500)),
+            thumbnailData: nil,
+            totalDataSize: text.utf8.count,
+            contentHash: Data(),
+            representationInfos: [RepresentationInfo(type: NSPasteboard.PasteboardType.string.rawValue, size: text.utf8.count)],
+            isSaved: false,
+            favoriteName: nil,
+            favoriteFolderId: nil
+        )
+        items.insert(item, at: 0)
+        let rep = PasteboardRepresentation(type: .string, data: Data(text.utf8))
+        store.saveBlobs(for: id, representations: [rep], thumbnail: nil)
+        store.saveIndex(items)
+    }
+
     // MARK: - Favorite Folders
 
     func addFavoriteFolder(name: String) -> FavoriteFolder {

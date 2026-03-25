@@ -2,7 +2,7 @@ import SwiftUI
 
 struct FavoriteManagerView: View {
     var clipboardManager: ClipboardManager
-    @State var selectedFolderFilter: FolderFilter = .all
+    @State var selectedFolderFilter: FolderFilter = .allHistory
     @State var selectedItemId: UUID?
     @State private var newFolderName = ""
     @State private var renamingFolderId: UUID?
@@ -16,20 +16,29 @@ struct FavoriteManagerView: View {
     }
 
     enum FolderFilter: Hashable {
-        case all
+        case allHistory
+        case allSaved
         case uncategorized
         case folder(UUID)
     }
 
-    private var filteredItems: [ClipboardItem] {
-        let saved = clipboardManager.items.filter(\.isSaved)
+    private var isShowingFavorites: Bool {
         switch selectedFolderFilter {
-        case .all:
-            return saved
+        case .allHistory: return false
+        default: return true
+        }
+    }
+
+    private var filteredItems: [ClipboardItem] {
+        switch selectedFolderFilter {
+        case .allHistory:
+            return clipboardManager.items
+        case .allSaved:
+            return clipboardManager.items.filter(\.isSaved)
         case .uncategorized:
-            return saved.filter { $0.favoriteFolderId == nil }
+            return clipboardManager.items.filter { $0.isSaved && $0.favoriteFolderId == nil }
         case .folder(let id):
-            return saved.filter { $0.favoriteFolderId == id }
+            return clipboardManager.items.filter { $0.favoriteFolderId == id }
         }
     }
 
@@ -42,7 +51,7 @@ struct FavoriteManagerView: View {
         NavigationSplitView {
             sidebar
         } content: {
-            favoriteList
+            itemList
         } detail: {
             detailArea
         }
@@ -51,18 +60,16 @@ struct FavoriteManagerView: View {
             selectedItemId = nil
         }
         .background {
-            // Delete: Backspaceキーで選択中フォルダを削除（サイドバーフォーカス時のみ）
             Button("") {
                 guard focusedArea == .sidebar else { return }
                 if case .folder(let id) = selectedFolderFilter {
                     clipboardManager.deleteFavoriteFolder(id: id)
-                    selectedFolderFilter = .all
+                    selectedFolderFilter = .allHistory
                 }
             }
             .keyboardShortcut(.delete, modifiers: [])
             .hidden()
 
-            // Return: 選択中フォルダの名前編集（サイドバーフォーカス時のみ）
             Button("") {
                 guard focusedArea == .sidebar else { return }
                 if case .folder(let id) = selectedFolderFilter,
@@ -80,10 +87,15 @@ struct FavoriteManagerView: View {
 
     private var sidebar: some View {
         List(selection: $selectedFolderFilter) {
-            Label("All Saved", systemImage: "bookmark.fill")
-                .tag(FolderFilter.all)
-            Label("Uncategorized", systemImage: "tray")
-                .tag(FolderFilter.uncategorized)
+            Label("All History", systemImage: "clock")
+                .tag(FolderFilter.allHistory)
+
+            Section("Favorites") {
+                Label("All Saved", systemImage: "bookmark.fill")
+                    .tag(FolderFilter.allSaved)
+                Label("Uncategorized", systemImage: "tray")
+                    .tag(FolderFilter.uncategorized)
+            }
 
             Section("Folders") {
                 ForEach(clipboardManager.favoriteFolders.sorted(by: { $0.order < $1.order })) { folder in
@@ -153,24 +165,33 @@ struct FavoriteManagerView: View {
         .navigationSplitViewColumnWidth(min: 160, ideal: 180)
     }
 
-    // MARK: - Favorite List
+    // MARK: - Item List
 
-    private var favoriteList: some View {
+    private var itemList: some View {
         Group {
             if filteredItems.isEmpty {
                 ContentUnavailableView {
-                    Label("No Favorites", systemImage: "bookmark.slash")
+                    Label(isShowingFavorites ? "No Favorites" : "No History",
+                          systemImage: isShowingFavorites ? "bookmark.slash" : "clipboard")
                 } description: {
-                    Text("Save items to keep them here")
+                    Text(isShowingFavorites ? "Save items to keep them here" : "Copied content will appear here")
                 }
             } else {
                 List(filteredItems, selection: $selectedItemId) { item in
                     HStack(spacing: 8) {
-                        // Category icon
-                        Image(systemName: item.category.icon)
-                            .font(.callout)
-                            .foregroundStyle(item.category.color)
-                            .frame(width: 18)
+                        ZStack(alignment: .bottomTrailing) {
+                            Image(systemName: item.category.icon)
+                                .font(.callout)
+                                .foregroundStyle(item.category.color)
+                                .frame(width: 18)
+
+                            if item.isSaved {
+                                Image(systemName: "bookmark.fill")
+                                    .font(.system(size: 7))
+                                    .foregroundStyle(item.isFavoriteItem ? Color.accentColor : .orange)
+                                    .offset(x: 4, y: 2)
+                            }
+                        }
 
                         VStack(alignment: .leading, spacing: 3) {
                             if let name = item.favoriteName, !name.isEmpty {
@@ -196,35 +217,165 @@ struct FavoriteManagerView: View {
         .navigationSplitViewColumnWidth(min: 220, ideal: 260)
         .toolbar {
             ToolbarItem {
-                Button {
-                    let defaultFolderId: UUID? = {
-                        if case .folder(let id) = selectedFolderFilter { return id }
-                        return nil
-                    }()
-                    clipboardManager.createFavorite(text: "", name: "", folderId: defaultFolderId)
-                    if let newItem = clipboardManager.items.first {
-                        selectedItemId = newItem.id
+                if isShowingFavorites {
+                    Button {
+                        let defaultFolderId: UUID? = {
+                            if case .folder(let id) = selectedFolderFilter { return id }
+                            return nil
+                        }()
+                        clipboardManager.createFavorite(text: "", name: "", folderId: defaultFolderId)
+                        if let newItem = clipboardManager.items.first {
+                            selectedItemId = newItem.id
+                        }
+                    } label: {
+                        Label("New Favorite", systemImage: "plus")
                     }
-                } label: {
-                    Label("New Favorite", systemImage: "plus")
+                } else {
+                    Button {
+                        clipboardManager.addTextToHistory(text: "")
+                        if let newItem = clipboardManager.items.first {
+                            selectedItemId = newItem.id
+                        }
+                    } label: {
+                        Label("Add Text", systemImage: "plus")
+                    }
                 }
             }
         }
     }
 
-    // MARK: - Detail (auto-save editor)
+    // MARK: - Detail
 
     @ViewBuilder
     private var detailArea: some View {
         if let item = selectedItem {
-            FavoriteInlineEditor(clipboardManager: clipboardManager, itemId: item.id)
-                .id(item.id)
+            if item.isSaved {
+                FavoriteInlineEditor(clipboardManager: clipboardManager, itemId: item.id)
+                    .id(item.id)
+            } else {
+                ItemPreviewDetail(clipboardManager: clipboardManager, itemId: item.id)
+                    .id(item.id)
+            }
         } else {
             ContentUnavailableView {
                 Label("No Selection", systemImage: "square.dashed")
             } description: {
-                Text("Select a favorite to edit")
+                Text("Select an item to view")
             }
+        }
+    }
+}
+
+// MARK: - Item Preview Detail (non-favorite items)
+
+private struct ItemPreviewDetail: View {
+    var clipboardManager: ClipboardManager
+    let itemId: UUID
+
+    @State private var text: String = ""
+
+    private var item: ClipboardItem? {
+        clipboardManager.items.first(where: { $0.id == itemId })
+    }
+
+    private var isTextEditable: Bool {
+        item?.category == .plainText
+    }
+
+    var body: some View {
+        ScrollView {
+            if let item {
+                VStack(alignment: .leading, spacing: 12) {
+                    // Header
+                    HStack {
+                        Image(systemName: item.category.icon)
+                            .foregroundStyle(item.category.color)
+                        Text(item.category.label)
+                            .font(.headline)
+                        Spacer()
+                    }
+
+                    LabeledContent("Copied At") {
+                        Text(item.timestamp, format: .dateTime
+                            .year().month().day()
+                            .hour().minute().second()
+                        )
+                    }
+
+                    LabeledContent("Data Size") {
+                        Text(item.formattedDataSize)
+                    }
+
+                    Divider()
+
+                    // Content / Preview
+                    if isTextEditable {
+                        TextEditor(text: $text)
+                            .font(.system(size: 13, design: .monospaced))
+                            .frame(minHeight: 200)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 5)
+                                    .stroke(Color(nsColor: .separatorColor))
+                            )
+                            .onChange(of: text) { _, newValue in
+                                clipboardManager.updateFavoriteContent(item, text: newValue)
+                            }
+                    } else {
+                        if let thumbnailData = item.thumbnailData,
+                           let nsImage = NSImage(data: thumbnailData) {
+                            Image(nsImage: nsImage)
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(maxHeight: 200)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                        }
+
+                        Text(item.previewText)
+                            .font(.system(size: 13))
+                            .textSelection(.enabled)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(8)
+                            .background(.quaternary)
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                    }
+
+                    Divider()
+
+                    // Actions
+                    HStack(spacing: 12) {
+                        Button {
+                            clipboardManager.toggleSave(item)
+                        } label: {
+                            Label("Save", systemImage: "bookmark")
+                        }
+
+                        Button {
+                            clipboardManager.restoreToClipboard(item)
+                        } label: {
+                            Label("Copy to Clipboard", systemImage: "doc.on.clipboard")
+                        }
+
+                        Button(role: .destructive) {
+                            clipboardManager.removeItem(item)
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                    }
+                }
+                .padding()
+            }
+        }
+        .onAppear { loadText() }
+    }
+
+    private func loadText() {
+        guard let item, isTextEditable else { return }
+        if let reps = clipboardManager.store.loadRepresentations(for: item.id),
+           let stringRep = reps.first(where: { $0.pasteboardType == .string }),
+           let str = String(data: stringRep.data, encoding: .utf8) {
+            text = str
+        } else {
+            text = item.previewText
         }
     }
 }
