@@ -1,11 +1,11 @@
 import SwiftUI
 
-struct SnippetManagerView: View {
+struct FavoriteManagerView: View {
     var clipboardManager: ClipboardManager
-    @State var selectedCategoryFilter: CategoryFilter = .all
+    @State var selectedFolderFilter: FolderFilter = .all
     @State var selectedItemId: UUID?
-    @State private var newCategoryName = ""
-    @State private var renamingCategoryId: UUID?
+    @State private var newFolderName = ""
+    @State private var renamingFolderId: UUID?
     @State private var renamingText = ""
     @FocusState private var isRenamingFocused: Bool
     @FocusState private var focusedArea: FocusArea?
@@ -15,21 +15,21 @@ struct SnippetManagerView: View {
         case detail
     }
 
-    enum CategoryFilter: Hashable {
+    enum FolderFilter: Hashable {
         case all
         case uncategorized
-        case category(UUID)
+        case folder(UUID)
     }
 
     private var filteredItems: [ClipboardItem] {
         let saved = clipboardManager.items.filter(\.isSaved)
-        switch selectedCategoryFilter {
+        switch selectedFolderFilter {
         case .all:
             return saved
         case .uncategorized:
-            return saved.filter { $0.snippetCategoryId == nil }
-        case .category(let id):
-            return saved.filter { $0.snippetCategoryId == id }
+            return saved.filter { $0.favoriteFolderId == nil }
+        case .folder(let id):
+            return saved.filter { $0.favoriteFolderId == id }
         }
     }
 
@@ -42,33 +42,33 @@ struct SnippetManagerView: View {
         NavigationSplitView {
             sidebar
         } content: {
-            snippetList
+            favoriteList
         } detail: {
             detailArea
         }
         .frame(minWidth: 800, minHeight: 500)
-        .onChange(of: selectedCategoryFilter) { _, _ in
+        .onChange(of: selectedFolderFilter) { _, _ in
             selectedItemId = nil
         }
         .background {
-            // Delete: Backspaceキーで選択中カテゴリを削除（サイドバーフォーカス時のみ）
+            // Delete: Backspaceキーで選択中フォルダを削除（サイドバーフォーカス時のみ）
             Button("") {
                 guard focusedArea == .sidebar else { return }
-                if case .category(let id) = selectedCategoryFilter {
-                    clipboardManager.deleteSnippetCategory(id: id)
-                    selectedCategoryFilter = .all
+                if case .folder(let id) = selectedFolderFilter {
+                    clipboardManager.deleteFavoriteFolder(id: id)
+                    selectedFolderFilter = .all
                 }
             }
             .keyboardShortcut(.delete, modifiers: [])
             .hidden()
 
-            // Return: 選択中カテゴリの名前編集（サイドバーフォーカス時のみ）
+            // Return: 選択中フォルダの名前編集（サイドバーフォーカス時のみ）
             Button("") {
                 guard focusedArea == .sidebar else { return }
-                if case .category(let id) = selectedCategoryFilter,
-                   let cat = clipboardManager.snippetCategories.first(where: { $0.id == id }) {
-                    renamingText = cat.name
-                    renamingCategoryId = id
+                if case .folder(let id) = selectedFolderFilter,
+                   let folder = clipboardManager.favoriteFolders.first(where: { $0.id == id }) {
+                    renamingText = folder.name
+                    renamingFolderId = id
                 }
             }
             .keyboardShortcut(.return, modifiers: [])
@@ -79,55 +79,55 @@ struct SnippetManagerView: View {
     // MARK: - Sidebar
 
     private var sidebar: some View {
-        List(selection: $selectedCategoryFilter) {
+        List(selection: $selectedFolderFilter) {
             Label("All Saved", systemImage: "bookmark.fill")
-                .tag(CategoryFilter.all)
+                .tag(FolderFilter.all)
             Label("Uncategorized", systemImage: "tray")
-                .tag(CategoryFilter.uncategorized)
+                .tag(FolderFilter.uncategorized)
 
-            Section("Categories") {
-                ForEach(clipboardManager.snippetCategories.sorted(by: { $0.order < $1.order })) { cat in
-                    if renamingCategoryId == cat.id {
+            Section("Folders") {
+                ForEach(clipboardManager.favoriteFolders.sorted(by: { $0.order < $1.order })) { folder in
+                    if renamingFolderId == folder.id {
                         TextField("", text: $renamingText, onCommit: {
                             if !renamingText.isEmpty {
-                                clipboardManager.renameSnippetCategory(id: cat.id, name: renamingText)
+                                clipboardManager.renameFavoriteFolder(id: folder.id, name: renamingText)
                             }
-                            renamingCategoryId = nil
+                            renamingFolderId = nil
                             isRenamingFocused = false
                         })
                         .textFieldStyle(.roundedBorder)
                         .focused($isRenamingFocused)
                         .onAppear { isRenamingFocused = true }
                         .onExitCommand {
-                            renamingCategoryId = nil
+                            renamingFolderId = nil
                             isRenamingFocused = false
                         }
                     } else {
-                        Label(cat.name, systemImage: "tag")
-                            .tag(CategoryFilter.category(cat.id))
+                        Label(folder.name, systemImage: "folder")
+                            .tag(FolderFilter.folder(folder.id))
                             .contextMenu {
                                 Button("Rename") {
-                                    renamingText = cat.name
-                                    renamingCategoryId = cat.id
+                                    renamingText = folder.name
+                                    renamingFolderId = folder.id
                                 }
-                                Button("Delete Category", role: .destructive) {
-                                    clipboardManager.deleteSnippetCategory(id: cat.id)
+                                Button("Delete Folder", role: .destructive) {
+                                    clipboardManager.deleteFavoriteFolder(id: folder.id)
                                 }
                             }
                     }
                 }
                 .onMove { from, to in
-                    var sorted = clipboardManager.snippetCategories.sorted(by: { $0.order < $1.order })
+                    var sorted = clipboardManager.favoriteFolders.sorted(by: { $0.order < $1.order })
                     sorted.move(fromOffsets: from, toOffset: to)
                     for i in sorted.indices {
                         sorted[i].order = i
                     }
-                    clipboardManager.reorderSnippetCategories(sorted)
+                    clipboardManager.reorderFavoriteFolders(sorted)
                 }
                 .onDelete { offsets in
-                    let sorted = clipboardManager.snippetCategories.sorted(by: { $0.order < $1.order })
+                    let sorted = clipboardManager.favoriteFolders.sorted(by: { $0.order < $1.order })
                     for index in offsets {
-                        clipboardManager.deleteSnippetCategory(id: sorted[index].id)
+                        clipboardManager.deleteFavoriteFolder(id: sorted[index].id)
                     }
                 }
             }
@@ -137,29 +137,29 @@ struct SnippetManagerView: View {
         .focused($focusedArea, equals: .sidebar)
         .safeAreaInset(edge: .bottom) {
             HStack {
-                TextField("New Category", text: $newCategoryName)
+                TextField("New Folder", text: $newFolderName)
                     .textFieldStyle(.roundedBorder)
                 Button {
-                    guard !newCategoryName.isEmpty else { return }
-                    _ = clipboardManager.addSnippetCategory(name: newCategoryName)
-                    newCategoryName = ""
+                    guard !newFolderName.isEmpty else { return }
+                    _ = clipboardManager.addFavoriteFolder(name: newFolderName)
+                    newFolderName = ""
                 } label: {
                     Image(systemName: "plus")
                 }
-                .disabled(newCategoryName.isEmpty)
+                .disabled(newFolderName.isEmpty)
             }
             .padding(8)
         }
         .navigationSplitViewColumnWidth(min: 160, ideal: 180)
     }
 
-    // MARK: - Snippet List
+    // MARK: - Favorite List
 
-    private var snippetList: some View {
+    private var favoriteList: some View {
         Group {
             if filteredItems.isEmpty {
                 ContentUnavailableView {
-                    Label("No Snippets", systemImage: "bookmark.slash")
+                    Label("No Favorites", systemImage: "bookmark.slash")
                 } description: {
                     Text("Save items to keep them here")
                 }
@@ -173,15 +173,15 @@ struct SnippetManagerView: View {
                             .frame(width: 18)
 
                         VStack(alignment: .leading, spacing: 3) {
-                            if let name = item.snippetName, !name.isEmpty {
+                            if let name = item.favoriteName, !name.isEmpty {
                                 Text(name)
                                     .font(.body.bold())
                                     .lineLimit(1)
                             }
                             ItemPreviewContent(item: item, maxThumbnailHeight: 30)
-                            if let catId = item.snippetCategoryId,
-                               let cat = clipboardManager.snippetCategories.first(where: { $0.id == catId }) {
-                                Text(cat.name)
+                            if let folderId = item.favoriteFolderId,
+                               let folder = clipboardManager.favoriteFolders.first(where: { $0.id == folderId }) {
+                                Text(folder.name)
                                     .font(.caption)
                                     .foregroundStyle(.tertiary)
                             }
@@ -196,16 +196,16 @@ struct SnippetManagerView: View {
         .toolbar {
             ToolbarItem {
                 Button {
-                    let defaultCategoryId: UUID? = {
-                        if case .category(let id) = selectedCategoryFilter { return id }
+                    let defaultFolderId: UUID? = {
+                        if case .folder(let id) = selectedFolderFilter { return id }
                         return nil
                     }()
-                    clipboardManager.createSnippet(text: "", name: "", categoryId: defaultCategoryId)
+                    clipboardManager.createFavorite(text: "", name: "", folderId: defaultFolderId)
                     if let newItem = clipboardManager.items.first {
                         selectedItemId = newItem.id
                     }
                 } label: {
-                    Label("New Snippet", systemImage: "plus")
+                    Label("New Favorite", systemImage: "plus")
                 }
             }
         }
@@ -216,13 +216,13 @@ struct SnippetManagerView: View {
     @ViewBuilder
     private var detailArea: some View {
         if let item = selectedItem {
-            SnippetInlineEditor(clipboardManager: clipboardManager, itemId: item.id)
+            FavoriteInlineEditor(clipboardManager: clipboardManager, itemId: item.id)
                 .id(item.id)
         } else {
             ContentUnavailableView {
                 Label("No Selection", systemImage: "square.dashed")
             } description: {
-                Text("Select a snippet to edit")
+                Text("Select a favorite to edit")
             }
         }
     }
@@ -230,12 +230,12 @@ struct SnippetManagerView: View {
 
 // MARK: - Inline Editor (auto-save)
 
-private struct SnippetInlineEditor: View {
+private struct FavoriteInlineEditor: View {
     var clipboardManager: ClipboardManager
     let itemId: UUID
 
     @State private var name: String = ""
-    @State private var selectedCategoryId: UUID?
+    @State private var selectedFolderId: UUID?
     @State private var text: String = ""
 
     private var item: ClipboardItem? {
@@ -252,33 +252,33 @@ private struct SnippetInlineEditor: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 12) {
-                // Snippet Name
+                // Favorite Name
                 HStack(alignment: .top) {
-                    Text("Snippet Name")
+                    Text("Favorite Name")
                         .frame(width: labelWidth, alignment: .trailing)
                     TextField("", text: $name)
                         .textFieldStyle(.roundedBorder)
                         .onChange(of: name) { _, newValue in
                             if let item {
-                                clipboardManager.updateSnippetName(item, name: newValue)
+                                clipboardManager.updateFavoriteName(item, name: newValue)
                             }
                         }
                 }
 
-                // Category
+                // Folder
                 HStack(alignment: .top) {
-                    Text("Category")
+                    Text("Folder")
                         .frame(width: labelWidth, alignment: .trailing)
-                    Picker("", selection: $selectedCategoryId) {
+                    Picker("", selection: $selectedFolderId) {
                         Text("None").tag(UUID?.none)
-                        ForEach(clipboardManager.snippetCategories.sorted(by: { $0.order < $1.order })) { cat in
-                            Text(cat.name).tag(UUID?.some(cat.id))
+                        ForEach(clipboardManager.favoriteFolders.sorted(by: { $0.order < $1.order })) { folder in
+                            Text(folder.name).tag(UUID?.some(folder.id))
                         }
                     }
                     .labelsHidden()
-                    .onChange(of: selectedCategoryId) { _, newValue in
+                    .onChange(of: selectedFolderId) { _, newValue in
                         if let item {
-                            clipboardManager.updateSnippetCategory(item, categoryId: newValue)
+                            clipboardManager.updateFavoriteFolder(item, folderId: newValue)
                         }
                     }
                 }
@@ -299,7 +299,7 @@ private struct SnippetInlineEditor: View {
                             )
                             .onChange(of: text) { _, newValue in
                                 if let item {
-                                    clipboardManager.updateSnippetContent(item, text: newValue)
+                                    clipboardManager.updateFavoriteContent(item, text: newValue)
                                 }
                             }
                     }
@@ -351,8 +351,8 @@ private struct SnippetInlineEditor: View {
 
     private func loadItem() {
         guard let item else { return }
-        name = item.snippetName ?? ""
-        selectedCategoryId = item.snippetCategoryId
+        name = item.favoriteName ?? ""
+        selectedFolderId = item.favoriteFolderId
         if let reps = clipboardManager.store.loadRepresentations(for: item.id),
            let stringRep = reps.first(where: { $0.pasteboardType == .string }),
            let str = String(data: stringRep.data, encoding: .utf8) {

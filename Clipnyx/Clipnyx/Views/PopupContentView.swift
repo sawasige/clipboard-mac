@@ -10,23 +10,23 @@ struct PopupContentView: View {
     @State private var keyboardNavigation = true
     @State private var lastScreenPosition: CGPoint?
     @State private var selectedCategory: ClipboardContentCategory?
-    @State private var savedFilterIndex = 0  // 0=off, 1=all saved, 2=uncategorized, 3+=snippet categories
+    @State private var savedFilterIndex = 0  // 0=off, 1=all saved, 2=uncategorized, 3+=favorite folders
     @State private var listContentHeight: CGFloat = 0
     @State private var detailItem: ClipboardItem?
     @FocusState private var isSearchFocused: Bool
 
     private var showSavedOnly: Bool { savedFilterIndex > 0 }
 
-    /// Tab cycle: 0=off, 1=all saved, 2=uncategorized, 3,4,...=snippet categories
+    /// Tab cycle: 0=off, 1=all saved, 2=uncategorized, 3,4,...=favorite folders
     private var savedFilterCycleCount: Int {
-        3 + clipboardManager.snippetCategories.count
+        3 + clipboardManager.favoriteFolders.count
     }
 
-    private var selectedSnippetCategoryId: UUID? {
-        let sortedCategories = clipboardManager.snippetCategories.sorted(by: { $0.order < $1.order })
-        let catIndex = savedFilterIndex - 3
-        guard catIndex >= 0, catIndex < sortedCategories.count else { return nil }
-        return sortedCategories[catIndex].id
+    private var selectedFavoriteFolderId: UUID? {
+        let sortedFolders = clipboardManager.favoriteFolders.sorted(by: { $0.order < $1.order })
+        let folderIndex = savedFilterIndex - 3
+        guard folderIndex >= 0, folderIndex < sortedFolders.count else { return nil }
+        return sortedFolders[folderIndex].id
     }
 
     private var savedFilterLabel: String? {
@@ -35,9 +35,9 @@ struct PopupContentView: View {
         case 1: return String(localized: "All Saved")
         case 2: return String(localized: "Uncategorized")
         default:
-            if let id = selectedSnippetCategoryId,
-               let cat = clipboardManager.snippetCategories.first(where: { $0.id == id }) {
-                return cat.name
+            if let id = selectedFavoriteFolderId,
+               let folder = clipboardManager.favoriteFolders.first(where: { $0.id == id }) {
+                return folder.name
             }
             return nil
         }
@@ -48,9 +48,9 @@ struct PopupContentView: View {
         if savedFilterIndex == 1 {
             result = result.filter(\.isSaved)
         } else if savedFilterIndex == 2 {
-            result = result.filter { $0.isSaved && $0.snippetCategoryId == nil }
-        } else if let catId = selectedSnippetCategoryId {
-            result = result.filter { $0.snippetCategoryId == catId }
+            result = result.filter { $0.isSaved && $0.favoriteFolderId == nil }
+        } else if let folderId = selectedFavoriteFolderId {
+            result = result.filter { $0.favoriteFolderId == folderId }
         }
         if let category = selectedCategory {
             result = result.filter { $0.category == category }
@@ -58,7 +58,7 @@ struct PopupContentView: View {
         if !searchText.isEmpty {
             result = result.filter {
                 $0.previewText.localizedCaseInsensitiveContains(searchText)
-                || ($0.snippetName?.localizedCaseInsensitiveContains(searchText) ?? false)
+                || ($0.favoriteName?.localizedCaseInsensitiveContains(searchText) ?? false)
             }
         }
         return result
@@ -122,35 +122,35 @@ struct PopupContentView: View {
                 .fixedSize()
                 .help("Filter")
 
-                // New snippet
+                // New favorite
                 Button {
-                    NotificationCenter.default.post(name: .openSnippetEditor, object: nil)
+                    NotificationCenter.default.post(name: .openFavoriteEditor, object: nil)
                 } label: {
                     Image(systemName: "plus")
                         .foregroundStyle(.secondary)
                 }
                 .buttonStyle(.plain)
-                .help("New Snippet")
+                .help("New Favorite")
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
 
             Divider()
 
-            // Snippet category chips (visible when saved filter is active)
+            // Favorite folder chips (visible when saved filter is active)
             if showSavedOnly {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 6) {
-                        snippetChip(String(localized: "All Saved"), isSelected: savedFilterIndex == 1) {
+                        folderChip(String(localized: "All Saved"), isSelected: savedFilterIndex == 1) {
                             savedFilterIndex = 1
                             selectedIndex = 0
                         }
-                        snippetChip(String(localized: "Uncategorized"), isSelected: savedFilterIndex == 2) {
+                        folderChip(String(localized: "Uncategorized"), isSelected: savedFilterIndex == 2) {
                             savedFilterIndex = 2
                             selectedIndex = 0
                         }
-                        ForEach(Array(clipboardManager.snippetCategories.sorted(by: { $0.order < $1.order }).enumerated()), id: \.element.id) { i, cat in
-                            snippetChip(cat.name, isSelected: savedFilterIndex == 3 + i) {
+                        ForEach(Array(clipboardManager.favoriteFolders.sorted(by: { $0.order < $1.order }).enumerated()), id: \.element.id) { i, folder in
+                            folderChip(folder.name, isSelected: savedFilterIndex == 3 + i) {
                                 savedFilterIndex = 3 + i
                                 selectedIndex = 0
                             }
@@ -284,7 +284,7 @@ struct PopupContentView: View {
         }
     }
 
-    private func snippetChip(_ label: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
+    private func folderChip(_ label: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(label)
                 .font(.caption)
@@ -423,14 +423,14 @@ private struct UnifiedItemRow: View {
                 if item.isSaved {
                     Image(systemName: "bookmark.fill")
                         .font(.system(size: 7))
-                        .foregroundStyle(item.isSnippet ? Color.accentColor : .orange)
+                        .foregroundStyle(item.isFavoriteItem ? Color.accentColor : .orange)
                         .offset(x: 4, y: 2)
                 }
             }
 
             VStack(alignment: .leading, spacing: 2) {
-                if let snippetName = item.snippetName {
-                    Text(snippetName)
+                if let favoriteName = item.favoriteName {
+                    Text(favoriteName)
                         .font(.callout.bold())
                         .foregroundStyle(Color.accentColor)
                         .lineLimit(1)

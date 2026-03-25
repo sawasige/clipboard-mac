@@ -1,6 +1,6 @@
 import Foundation
 
-struct SnippetCategory: Identifiable, Codable, Sendable, Equatable {
+struct FavoriteFolder: Identifiable, Codable, Sendable, Equatable {
     let id: UUID
     var name: String
     var order: Int

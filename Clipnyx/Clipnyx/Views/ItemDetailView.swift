@@ -15,14 +15,14 @@ struct ItemDetailView: View {
                 Spacer()
             }
 
-            if let snippetName = item.snippetName {
-                LabeledContent("Snippet") {
-                    Text(snippetName)
+            if let favoriteName = item.favoriteName {
+                LabeledContent("Favorite") {
+                    Text(favoriteName)
                 }
-                if let categoryId = item.snippetCategoryId,
-                   let category = clipboardManager?.snippetCategories.first(where: { $0.id == categoryId }) {
-                    LabeledContent("Snippet Category") {
-                        Text(category.name)
+                if let folderId = item.favoriteFolderId,
+                   let folder = clipboardManager?.favoriteFolders.first(where: { $0.id == folderId }) {
+                    LabeledContent("Folder") {
+                        Text(folder.name)
                     }
                 }
             }
@@ -91,9 +91,9 @@ struct ItemDetailView: View {
             if item.isSaved {
                 Divider()
                 Button {
-                    NotificationCenter.default.post(name: .openSnippetEditor, object: item)
+                    NotificationCenter.default.post(name: .openFavoriteEditor, object: item)
                 } label: {
-                    Label("Edit Snippet", systemImage: "pencil")
+                    Label("Edit Favorite", systemImage: "pencil")
                 }
                 .buttonStyle(.link)
             }

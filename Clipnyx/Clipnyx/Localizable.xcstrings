@@ -213,16 +213,6 @@
         }
       }
     },
-    "Categories" : {
-      "localizations" : {
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "カテゴリ"
-          }
-        }
-      }
-    },
     "Category" : {
       "localizations" : {
         "ja" : {
@@ -374,12 +364,12 @@
         }
       }
     },
-    "Delete Category" : {
+    "Delete Folder" : {
       "localizations" : {
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "カテゴリを削除"
+            "value" : "フォルダを削除"
           }
         }
       }
@@ -414,12 +404,12 @@
         }
       }
     },
-    "Edit Snippet" : {
+    "Edit Favorite" : {
       "localizations" : {
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "スニペットを編集"
+            "value" : "お気に入りを編集"
           }
         }
       }
@@ -430,6 +420,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "エディション"
+          }
+        }
+      }
+    },
+    "Favorite" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "お気に入り"
+          }
+        }
+      }
+    },
+    "Favorite Name" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "お気に入り名"
           }
         }
       }
@@ -450,6 +460,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "フィルタ"
+          }
+        }
+      }
+    },
+    "Folder" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "フォルダ"
+          }
+        }
+      }
+    },
+    "Folders" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "フォルダ"
           }
         }
       }
@@ -534,12 +564,12 @@
         }
       }
     },
-    "Manage Snippets" : {
+    "Manage Favorites" : {
       "localizations" : {
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "スニペットを管理"
+            "value" : "お気に入りを管理"
           }
         }
       }
@@ -564,22 +594,32 @@
         }
       }
     },
-    "New Category" : {
+    "New Favorite" : {
       "localizations" : {
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "新しいカテゴリ"
+            "value" : "新規お気に入り"
           }
         }
       }
     },
-    "New Snippet" : {
+    "New Folder" : {
       "localizations" : {
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "新規スニペット"
+            "value" : "新しいフォルダ"
+          }
+        }
+      }
+    },
+    "No Favorites" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "お気に入りなし"
           }
         }
       }
@@ -620,16 +660,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "未選択"
-          }
-        }
-      }
-    },
-    "No Snippets" : {
-      "localizations" : {
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "スニペットなし"
           }
         }
       }
@@ -754,12 +784,12 @@
         }
       }
     },
-    "Register as Snippet" : {
+    "Register as Favorite" : {
       "localizations" : {
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "スニペットに登録"
+            "value" : "お気に入りに登録"
           }
         }
       }
@@ -844,12 +874,12 @@
         }
       }
     },
-    "Select a snippet to edit" : {
+    "Select a favorite to edit" : {
       "localizations" : {
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "スニペットを選択して編集"
+            "value" : "お気に入りを選択して編集"
           }
         }
       }
@@ -880,36 +910,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "履歴を表示（%@）"
-          }
-        }
-      }
-    },
-    "Snippet" : {
-      "localizations" : {
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "スニペット"
-          }
-        }
-      }
-    },
-    "Snippet Category" : {
-      "localizations" : {
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "スニペットカテゴリ"
-          }
-        }
-      }
-    },
-    "Snippet Name" : {
-      "localizations" : {
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "スニペット名"
           }
         }
       }

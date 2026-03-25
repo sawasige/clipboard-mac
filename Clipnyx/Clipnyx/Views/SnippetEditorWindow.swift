@@ -1,17 +1,17 @@
 import SwiftUI
 
-struct SnippetEditorView: View {
+struct FavoriteEditorView: View {
     var clipboardManager: ClipboardManager
     let item: ClipboardItem?
     let onDismiss: () -> Void
 
     @State private var name: String = ""
-    @State private var selectedCategoryId: UUID?
+    @State private var selectedFolderId: UUID?
     @State private var text: String = ""
-    @State private var newCategoryName: String = ""
-    @State private var showNewCategory = false
+    @State private var newFolderName: String = ""
+    @State private var showNewFolder = false
 
-    private var isNewSnippet: Bool { item == nil }
+    private var isNewFavorite: Bool { item == nil }
     private var isTextEditable: Bool {
         guard let item else { return true }
         return item.category == .plainText
@@ -21,47 +21,47 @@ struct SnippetEditorView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // Snippet Name
+            // Favorite Name
             HStack(alignment: .top) {
-                Text("Snippet Name")
+                Text("Favorite Name")
                     .frame(width: labelWidth, alignment: .trailing)
                 TextField("", text: $name)
                     .textFieldStyle(.roundedBorder)
             }
 
-            // Category
-            if showNewCategory {
+            // Folder
+            if showNewFolder {
                 HStack(alignment: .top) {
-                    Text("Category")
+                    Text("Folder")
                         .frame(width: labelWidth, alignment: .trailing)
-                    TextField("New Category", text: $newCategoryName)
+                    TextField("New Folder", text: $newFolderName)
                         .textFieldStyle(.roundedBorder)
                     Button("Add") {
-                        guard !newCategoryName.isEmpty else { return }
-                        let category = clipboardManager.addSnippetCategory(name: newCategoryName)
-                        selectedCategoryId = category.id
-                        newCategoryName = ""
-                        showNewCategory = false
+                        guard !newFolderName.isEmpty else { return }
+                        let folder = clipboardManager.addFavoriteFolder(name: newFolderName)
+                        selectedFolderId = folder.id
+                        newFolderName = ""
+                        showNewFolder = false
                     }
-                    .disabled(newCategoryName.isEmpty)
+                    .disabled(newFolderName.isEmpty)
                     Button("Cancel") {
-                        showNewCategory = false
-                        newCategoryName = ""
+                        showNewFolder = false
+                        newFolderName = ""
                     }
                 }
             } else {
                 HStack(alignment: .top) {
-                    Text("Category")
+                    Text("Folder")
                         .frame(width: labelWidth, alignment: .trailing)
-                    Picker("", selection: $selectedCategoryId) {
+                    Picker("", selection: $selectedFolderId) {
                         Text("None").tag(UUID?.none)
-                        ForEach(clipboardManager.snippetCategories.sorted(by: { $0.order < $1.order })) { cat in
-                            Text(cat.name).tag(UUID?.some(cat.id))
+                        ForEach(clipboardManager.favoriteFolders.sorted(by: { $0.order < $1.order })) { folder in
+                            Text(folder.name).tag(UUID?.some(folder.id))
                         }
                     }
                     .labelsHidden()
                     Button {
-                        showNewCategory = true
+                        showNewFolder = true
                     } label: {
                         Image(systemName: "plus")
                     }
@@ -128,7 +128,7 @@ struct SnippetEditorView: View {
                     onDismiss()
                 }
                 .keyboardShortcut(.cancelAction)
-                Button(isNewSnippet ? "Create" : "Save") {
+                Button(isNewFavorite ? "Create" : "Save") {
                     NSApp.keyWindow?.makeFirstResponder(nil)
                     save()
                     onDismiss()
@@ -141,8 +141,8 @@ struct SnippetEditorView: View {
         .fixedSize(horizontal: false, vertical: !isTextEditable)
         .onAppear {
             if let item {
-                name = item.snippetName ?? ""
-                selectedCategoryId = item.snippetCategoryId
+                name = item.favoriteName ?? ""
+                selectedFolderId = item.favoriteFolderId
                 if let reps = clipboardManager.store.loadRepresentations(for: item.id),
                    let stringRep = reps.first(where: { $0.pasteboardType == .string }),
                    let str = String(data: stringRep.data, encoding: .utf8) {
@@ -159,16 +159,16 @@ struct SnippetEditorView: View {
             if !item.isSaved {
                 clipboardManager.toggleSave(item)
             }
-            clipboardManager.updateSnippetName(item, name: name)
-            clipboardManager.updateSnippetCategory(item, categoryId: selectedCategoryId)
+            clipboardManager.updateFavoriteName(item, name: name)
+            clipboardManager.updateFavoriteFolder(item, folderId: selectedFolderId)
             if !text.isEmpty {
-                clipboardManager.updateSnippetContent(item, text: text)
+                clipboardManager.updateFavoriteContent(item, text: text)
             }
         } else {
-            clipboardManager.createSnippet(
+            clipboardManager.createFavorite(
                 text: text,
                 name: name,
-                categoryId: selectedCategoryId
+                folderId: selectedFolderId
             )
         }
     }

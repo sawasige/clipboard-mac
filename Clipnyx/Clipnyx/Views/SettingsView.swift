@@ -82,8 +82,8 @@ struct HistoryTab: View {
             }
 
             Section {
-                Button("Manage Snippets") {
-                    NotificationCenter.default.post(name: .openSnippetManager, object: nil)
+                Button("Manage Favorites") {
+                    NotificationCenter.default.post(name: .openFavoriteManager, object: nil)
                 }
             }
 

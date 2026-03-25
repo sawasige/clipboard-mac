@@ -16,7 +16,12 @@ final class ClipboardStore: Sendable {
         baseURL.appendingPathComponent("blobs", isDirectory: true)
     }()
 
-    private static let snippetCategoriesURL: URL = {
+    private static let favoriteFoldersURL: URL = {
+        baseURL.appendingPathComponent("favorite_folders.json")
+    }()
+
+    /// Legacy file path for backward compatibility
+    private static let legacySnippetCategoriesURL: URL = {
         baseURL.appendingPathComponent("snippet_categories.json")
     }()
 
@@ -35,8 +40,19 @@ final class ClipboardStore: Sendable {
         let isPinned: Bool?
         // New fields
         let isSaved: Bool?
+        let favoriteName: String?
+        let favoriteFolderId: UUID?
+
+        // Legacy fallback keys
         let snippetName: String?
         let snippetCategoryId: UUID?
+
+        enum CodingKeys: String, CodingKey {
+            case id, timestamp, category, previewText, hasThumbnail, totalDataSize, contentHash
+            case representationInfos, isPinned, isSaved
+            case favoriteName, favoriteFolderId
+            case snippetName, snippetCategoryId
+        }
     }
 
     private struct RepInfoEntry: Codable {
@@ -64,8 +80,10 @@ final class ClipboardStore: Sendable {
                 representationInfos: item.representationInfos.map { RepInfoEntry(type: $0.type, size: $0.size) },
                 isPinned: nil,
                 isSaved: item.isSaved,
-                snippetName: item.snippetName,
-                snippetCategoryId: item.snippetCategoryId
+                favoriteName: item.favoriteName,
+                favoriteFolderId: item.favoriteFolderId,
+                snippetName: nil,
+                snippetCategoryId: nil
             )
         }
         writeQueue.async {
@@ -139,8 +157,8 @@ final class ClipboardStore: Sendable {
                     contentHash: entry.contentHash,
                     representationInfos: entry.representationInfos.map { RepresentationInfo(type: $0.type, size: $0.size) },
                     isSaved: entry.isSaved ?? entry.isPinned ?? false,
-                    snippetName: entry.snippetName,
-                    snippetCategoryId: entry.snippetCategoryId
+                    favoriteName: entry.favoriteName ?? entry.snippetName,
+                    favoriteFolderId: entry.favoriteFolderId ?? entry.snippetCategoryId
                 )
             }
         } catch {
@@ -191,29 +209,42 @@ final class ClipboardStore: Sendable {
         }
     }
 
-    // MARK: - Snippet Categories
+    // MARK: - Favorite Folders
 
-    func saveSnippetCategories(_ categories: [SnippetCategory]) {
+    func saveFavoriteFolders(_ folders: [FavoriteFolder]) {
         writeQueue.async {
             do {
                 try FileManager.default.createDirectory(at: Self.baseURL, withIntermediateDirectories: true)
-                let data = try JSONEncoder().encode(categories)
-                try data.write(to: Self.snippetCategoriesURL, options: .atomic)
+                let data = try JSONEncoder().encode(folders)
+                try data.write(to: Self.favoriteFoldersURL, options: .atomic)
             } catch {
-                print("Failed to save snippet categories: \(error)")
+                print("Failed to save favorite folders: \(error)")
             }
         }
     }
 
-    func loadSnippetCategories() -> [SnippetCategory] {
-        guard FileManager.default.fileExists(atPath: Self.snippetCategoriesURL.path) else { return [] }
-        do {
-            let data = try Data(contentsOf: Self.snippetCategoriesURL)
-            return try JSONDecoder().decode([SnippetCategory].self, from: data)
-        } catch {
-            print("Failed to load snippet categories: \(error)")
-            return []
+    func loadFavoriteFolders() -> [FavoriteFolder] {
+        // Try new file first
+        if FileManager.default.fileExists(atPath: Self.favoriteFoldersURL.path) {
+            do {
+                let data = try Data(contentsOf: Self.favoriteFoldersURL)
+                return try JSONDecoder().decode([FavoriteFolder].self, from: data)
+            } catch {
+                print("Failed to load favorite folders: \(error)")
+                return []
+            }
         }
+        // Fallback to legacy file
+        if FileManager.default.fileExists(atPath: Self.legacySnippetCategoriesURL.path) {
+            do {
+                let data = try Data(contentsOf: Self.legacySnippetCategoriesURL)
+                return try JSONDecoder().decode([FavoriteFolder].self, from: data)
+            } catch {
+                print("Failed to load legacy snippet categories: \(error)")
+                return []
+            }
+        }
+        return []
     }
 
     // MARK: - Cleanup Orphans

@@ -1,50 +1,50 @@
 import SwiftUI
 
-struct SnippetRegistrationView: View {
+struct FavoriteRegistrationView: View {
     var clipboardManager: ClipboardManager
     let item: ClipboardItem
     let onDismiss: () -> Void
 
     @State private var name: String = ""
-    @State private var selectedCategoryId: UUID?
-    @State private var newCategoryName: String = ""
-    @State private var showNewCategory = false
+    @State private var selectedFolderId: UUID?
+    @State private var newFolderName: String = ""
+    @State private var showNewFolder = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Register as Snippet")
+            Text("Register as Favorite")
                 .font(.headline)
 
-            TextField("Snippet Name", text: $name)
+            TextField("Favorite Name", text: $name)
                 .textFieldStyle(.roundedBorder)
 
-            if showNewCategory {
+            if showNewFolder {
                 HStack {
-                    TextField("New Category", text: $newCategoryName)
+                    TextField("New Folder", text: $newFolderName)
                         .textFieldStyle(.roundedBorder)
                     Button("Add") {
-                        guard !newCategoryName.isEmpty else { return }
-                        let category = clipboardManager.addSnippetCategory(name: newCategoryName)
-                        selectedCategoryId = category.id
-                        newCategoryName = ""
-                        showNewCategory = false
+                        guard !newFolderName.isEmpty else { return }
+                        let folder = clipboardManager.addFavoriteFolder(name: newFolderName)
+                        selectedFolderId = folder.id
+                        newFolderName = ""
+                        showNewFolder = false
                     }
-                    .disabled(newCategoryName.isEmpty)
+                    .disabled(newFolderName.isEmpty)
                     Button("Cancel") {
-                        showNewCategory = false
-                        newCategoryName = ""
+                        showNewFolder = false
+                        newFolderName = ""
                     }
                 }
             } else {
                 HStack {
-                    Picker("Category", selection: $selectedCategoryId) {
+                    Picker("Folder", selection: $selectedFolderId) {
                         Text("None").tag(UUID?.none)
-                        ForEach(clipboardManager.snippetCategories.sorted(by: { $0.order < $1.order })) { cat in
-                            Text(cat.name).tag(UUID?.some(cat.id))
+                        ForEach(clipboardManager.favoriteFolders.sorted(by: { $0.order < $1.order })) { folder in
+                            Text(folder.name).tag(UUID?.some(folder.id))
                         }
                     }
                     Button {
-                        showNewCategory = true
+                        showNewFolder = true
                     } label: {
                         Image(systemName: "plus")
                     }
@@ -58,14 +58,14 @@ struct SnippetRegistrationView: View {
                 }
                 .keyboardShortcut(.cancelAction)
                 Button("Register") {
-                    let categoryId: UUID
-                    if let selected = selectedCategoryId {
-                        categoryId = selected
+                    let folderId: UUID
+                    if let selected = selectedFolderId {
+                        folderId = selected
                     } else {
-                        let category = clipboardManager.addSnippetCategory(name: String(localized: "General"))
-                        categoryId = category.id
+                        let folder = clipboardManager.addFavoriteFolder(name: String(localized: "General"))
+                        folderId = folder.id
                     }
-                    clipboardManager.registerAsSnippet(item, name: name, categoryId: categoryId)
+                    clipboardManager.registerAsFavorite(item, name: name, folderId: folderId)
                     onDismiss()
                 }
                 .keyboardShortcut(.defaultAction)
@@ -76,7 +76,7 @@ struct SnippetRegistrationView: View {
         .frame(width: 300)
         .onAppear {
             name = String(item.previewText.prefix(while: { $0 != "\n" }).prefix(50))
-            selectedCategoryId = clipboardManager.snippetCategories.first?.id
+            selectedFolderId = clipboardManager.favoriteFolders.first?.id
         }
     }
 }

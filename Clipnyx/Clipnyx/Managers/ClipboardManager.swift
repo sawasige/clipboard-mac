@@ -5,7 +5,7 @@ import Observation
 final class ClipboardManager: @unchecked Sendable {
     var items: [ClipboardItem] = []
     var isPaused: Bool = false
-    var snippetCategories: [SnippetCategory] = []
+    var favoriteFolders: [FavoriteFolder] = []
 
     var maxHistoryCount: Int {
         didSet { UserDefaults.standard.set(maxHistoryCount, forKey: "maxHistoryCount") }
@@ -33,7 +33,7 @@ final class ClipboardManager: @unchecked Sendable {
             excludedCategories = []
         }
         items = store.loadIndex()
-        snippetCategories = store.loadSnippetCategories()
+        favoriteFolders = store.loadFavoriteFolders()
         store.cleanupOrphans(validIDs: Set(items.map(\.id)))
         lastChangeCount = NSPasteboard.general.changeCount
         startPolling()
@@ -144,51 +144,51 @@ final class ClipboardManager: @unchecked Sendable {
         var updated = items
         updated[index].isSaved.toggle()
         if !updated[index].isSaved {
-            updated[index].snippetName = nil
-            updated[index].snippetCategoryId = nil
+            updated[index].favoriteName = nil
+            updated[index].favoriteFolderId = nil
         }
         items = updated
         store.saveIndex(items)
     }
 
-    // MARK: - Snippet
+    // MARK: - Favorite
 
-    func registerAsSnippet(_ item: ClipboardItem, name: String, categoryId: UUID) {
+    func registerAsFavorite(_ item: ClipboardItem, name: String, folderId: UUID) {
         guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
         var updated = items
         updated[index].isSaved = true
-        updated[index].snippetName = name
-        updated[index].snippetCategoryId = categoryId
+        updated[index].favoriteName = name
+        updated[index].favoriteFolderId = folderId
         items = updated
         store.saveIndex(items)
     }
 
-    func removeFromSnippets(_ item: ClipboardItem) {
+    func removeFromFavorites(_ item: ClipboardItem) {
         guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
         var updated = items
-        updated[index].snippetName = nil
-        updated[index].snippetCategoryId = nil
+        updated[index].favoriteName = nil
+        updated[index].favoriteFolderId = nil
         items = updated
         store.saveIndex(items)
     }
 
-    func updateSnippetName(_ item: ClipboardItem, name: String) {
+    func updateFavoriteName(_ item: ClipboardItem, name: String) {
         guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
         var updated = items
-        updated[index].snippetName = name.isEmpty ? nil : name
+        updated[index].favoriteName = name.isEmpty ? nil : name
         items = updated
         store.saveIndex(items)
     }
 
-    func updateSnippetCategory(_ item: ClipboardItem, categoryId: UUID?) {
+    func updateFavoriteFolder(_ item: ClipboardItem, folderId: UUID?) {
         guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
         var updated = items
-        updated[index].snippetCategoryId = categoryId
+        updated[index].favoriteFolderId = folderId
         items = updated
         store.saveIndex(items)
     }
 
-    func updateSnippetContent(_ item: ClipboardItem, text: String) {
+    func updateFavoriteContent(_ item: ClipboardItem, text: String) {
         guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
         let current = items[index]
         items[index] = ClipboardItem(
@@ -201,8 +201,8 @@ final class ClipboardManager: @unchecked Sendable {
             contentHash: current.contentHash,
             representationInfos: [RepresentationInfo(type: NSPasteboard.PasteboardType.string.rawValue, size: text.utf8.count)],
             isSaved: current.isSaved,
-            snippetName: current.snippetName,
-            snippetCategoryId: current.snippetCategoryId
+            favoriteName: current.favoriteName,
+            favoriteFolderId: current.favoriteFolderId
         )
         // Blob を更新
         let rep = PasteboardRepresentation(type: .string, data: Data(text.utf8))
@@ -210,7 +210,7 @@ final class ClipboardManager: @unchecked Sendable {
         store.saveIndex(items)
     }
 
-    func createSnippet(text: String, name: String, categoryId: UUID?) {
+    func createFavorite(text: String, name: String, folderId: UUID?) {
         let id = UUID()
         let item = ClipboardItem(
             id: id,
@@ -222,8 +222,8 @@ final class ClipboardManager: @unchecked Sendable {
             contentHash: Data(),
             representationInfos: [RepresentationInfo(type: NSPasteboard.PasteboardType.string.rawValue, size: text.utf8.count)],
             isSaved: true,
-            snippetName: name,
-            snippetCategoryId: categoryId
+            favoriteName: name,
+            favoriteFolderId: folderId
         )
         items.insert(item, at: 0)
         let rep = PasteboardRepresentation(type: .string, data: Data(text.utf8))
@@ -231,38 +231,38 @@ final class ClipboardManager: @unchecked Sendable {
         store.saveIndex(items)
     }
 
-    // MARK: - Snippet Categories
+    // MARK: - Favorite Folders
 
-    func addSnippetCategory(name: String) -> SnippetCategory {
-        let maxOrder = snippetCategories.max(by: { $0.order < $1.order })?.order ?? -1
-        let category = SnippetCategory(name: name, order: maxOrder + 1)
-        snippetCategories.append(category)
-        store.saveSnippetCategories(snippetCategories)
-        return category
+    func addFavoriteFolder(name: String) -> FavoriteFolder {
+        let maxOrder = favoriteFolders.max(by: { $0.order < $1.order })?.order ?? -1
+        let folder = FavoriteFolder(name: name, order: maxOrder + 1)
+        favoriteFolders.append(folder)
+        store.saveFavoriteFolders(favoriteFolders)
+        return folder
     }
 
-    func renameSnippetCategory(id: UUID, name: String) {
-        guard let index = snippetCategories.firstIndex(where: { $0.id == id }) else { return }
-        var updated = snippetCategories
+    func renameFavoriteFolder(id: UUID, name: String) {
+        guard let index = favoriteFolders.firstIndex(where: { $0.id == id }) else { return }
+        var updated = favoriteFolders
         updated[index].name = name
-        snippetCategories = updated
-        store.saveSnippetCategories(snippetCategories)
+        favoriteFolders = updated
+        store.saveFavoriteFolders(favoriteFolders)
     }
 
-    func deleteSnippetCategory(id: UUID) {
-        snippetCategories.removeAll { $0.id == id }
-        store.saveSnippetCategories(snippetCategories)
-        // 該当カテゴリのアイテムからスニペット属性をクリア（isSavedは維持）
-        for i in items.indices where items[i].snippetCategoryId == id {
-            items[i].snippetName = nil
-            items[i].snippetCategoryId = nil
+    func deleteFavoriteFolder(id: UUID) {
+        favoriteFolders.removeAll { $0.id == id }
+        store.saveFavoriteFolders(favoriteFolders)
+        // 該当フォルダのアイテムからお気に入り属性をクリア（isSavedは維持）
+        for i in items.indices where items[i].favoriteFolderId == id {
+            items[i].favoriteName = nil
+            items[i].favoriteFolderId = nil
         }
         store.saveIndex(items)
     }
 
-    func reorderSnippetCategories(_ categories: [SnippetCategory]) {
-        snippetCategories = categories
-        store.saveSnippetCategories(snippetCategories)
+    func reorderFavoriteFolders(_ folders: [FavoriteFolder]) {
+        favoriteFolders = folders
+        store.saveFavoriteFolders(favoriteFolders)
     }
 
     // MARK: - Restore

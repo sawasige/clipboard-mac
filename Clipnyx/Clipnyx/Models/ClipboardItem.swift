@@ -17,10 +17,10 @@ struct ClipboardItem: Identifiable, Sendable {
     let contentHash: Data
     let representationInfos: [RepresentationInfo]
     var isSaved: Bool
-    var snippetName: String?
-    var snippetCategoryId: UUID?
+    var favoriteName: String?
+    var favoriteFolderId: UUID?
 
-    var isSnippet: Bool { snippetCategoryId != nil }
+    var isFavoriteItem: Bool { favoriteFolderId != nil }
 
     private static let maxCaptureSize: Int = 500 * 1024 * 1024 // 500MB safety cap
     private static let maxThumbnailDimension: CGFloat = 200.0
@@ -75,8 +75,8 @@ struct ClipboardItem: Identifiable, Sendable {
             contentHash: contentHash,
             representationInfos: reps.map { RepresentationInfo(type: $0.typeRawValue, size: $0.data.count) },
             isSaved: false,
-            snippetName: nil,
-            snippetCategoryId: nil
+            favoriteName: nil,
+            favoriteFolderId: nil
         )
 
         return (item, reps)

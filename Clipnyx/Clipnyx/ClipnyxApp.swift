@@ -19,8 +19,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let clipboardManager = ClipboardManager()
     private var popupController = PopupPanelController()
     private var settingsWindow: NSWindow?
-    private var snippetEditorWindow: NSWindow?
-    private var snippetManagerWindow: NSWindow?
+    private var favoriteEditorWindow: NSWindow?
+    private var favoriteManagerWindow: NSWindow?
     #if ENABLE_SPARKLE
     let updateManager = UpdateManager()
     #endif
@@ -48,14 +48,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         )
         NotificationCenter.default.addObserver(
             self,
-            selector: #selector(handleOpenSnippetEditor(_:)),
-            name: .openSnippetEditor,
+            selector: #selector(handleOpenFavoriteEditor(_:)),
+            name: .openFavoriteEditor,
             object: nil
         )
         NotificationCenter.default.addObserver(
             self,
-            selector: #selector(handleOpenSnippetManager(_:)),
-            name: .openSnippetManager,
+            selector: #selector(handleOpenFavoriteManager(_:)),
+            name: .openFavoriteManager,
             object: nil
         )
     }
@@ -69,31 +69,31 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         popupController.toggle(clipboardManager: clipboardManager)
     }
 
-    @objc private func handleOpenSnippetEditor(_ notification: Notification) {
+    @objc private func handleOpenFavoriteEditor(_ notification: Notification) {
         let item = notification.object as? ClipboardItem
-        showSnippetEditor(item: item)
+        showFavoriteEditor(item: item)
     }
 
-    @objc private func handleOpenSnippetManager(_ notification: Notification) {
+    @objc private func handleOpenFavoriteManager(_ notification: Notification) {
         let item = notification.object as? ClipboardItem
-        showSnippetManager(selectItem: item)
+        showFavoriteManager(selectItem: item)
     }
 
-    // MARK: - Snippet Editor (single item)
+    // MARK: - Favorite Editor (single item)
 
-    private func showSnippetEditor(item: ClipboardItem?) {
+    private func showFavoriteEditor(item: ClipboardItem?) {
         popupController.close(restoreFocus: false)
 
-        if let snippetEditorWindow {
-            snippetEditorWindow.close()
+        if let favoriteEditorWindow {
+            favoriteEditorWindow.close()
         }
 
-        let editorView = SnippetEditorView(
+        let editorView = FavoriteEditorView(
             clipboardManager: clipboardManager,
             item: item,
             onDismiss: { [weak self] in
-                self?.snippetEditorWindow?.close()
-                self?.snippetEditorWindow = nil
+                self?.favoriteEditorWindow?.close()
+                self?.favoriteEditorWindow = nil
             }
         )
 
@@ -101,10 +101,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             contentViewController: NSHostingController(rootView: editorView)
         )
         window.styleMask = [.titled, .closable, .resizable]
-        window.title = item != nil ? String(localized: "Edit Snippet") : String(localized: "New Snippet")
+        window.title = item != nil ? String(localized: "Edit Favorite") : String(localized: "New Favorite")
         window.setContentSize(NSSize(width: 500, height: 400))
         window.isReleasedWhenClosed = false
-        self.snippetEditorWindow = window
+        self.favoriteEditorWindow = window
 
         window.delegate = self
         window.center()
@@ -113,23 +113,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.activate(ignoringOtherApps: true)
     }
 
-    // MARK: - Snippet Manager
+    // MARK: - Favorite Manager
 
-    private func showSnippetManager(selectItem: ClipboardItem?) {
+    private func showFavoriteManager(selectItem: ClipboardItem?) {
         popupController.close(restoreFocus: false)
 
-        if let snippetManagerWindow {
-            snippetManagerWindow.makeKeyAndOrderFront(nil)
+        if let favoriteManagerWindow {
+            favoriteManagerWindow.makeKeyAndOrderFront(nil)
             NSApp.activate(ignoringOtherApps: true)
             // TODO: select item if provided
             return
         }
 
-        let managerView = SnippetManagerView(clipboardManager: clipboardManager)
+        let managerView = FavoriteManagerView(clipboardManager: clipboardManager)
         if let selectItem {
             managerView.selectedItemId = selectItem.id
-            if let catId = selectItem.snippetCategoryId {
-                managerView.selectedCategoryFilter = .category(catId)
+            if let folderId = selectItem.favoriteFolderId {
+                managerView.selectedFolderFilter = .folder(folderId)
             }
         }
 
@@ -137,10 +137,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             contentViewController: NSHostingController(rootView: managerView)
         )
         window.styleMask = [.titled, .closable, .resizable]
-        window.title = String(localized: "Manage Snippets")
+        window.title = String(localized: "Manage Favorites")
         window.setContentSize(NSSize(width: 800, height: 500))
         window.isReleasedWhenClosed = false
-        self.snippetManagerWindow = window
+        self.favoriteManagerWindow = window
 
         window.delegate = self
         window.center()
@@ -211,12 +211,12 @@ extension AppDelegate: NSWindowDelegate {
         let window = notification.object as? NSWindow
         if window === settingsWindow {
             settingsWindow = nil
-        } else if window === snippetEditorWindow {
-            snippetEditorWindow = nil
-        } else if window === snippetManagerWindow {
-            snippetManagerWindow = nil
+        } else if window === favoriteEditorWindow {
+            favoriteEditorWindow = nil
+        } else if window === favoriteManagerWindow {
+            favoriteManagerWindow = nil
         }
-        if settingsWindow == nil && snippetEditorWindow == nil && snippetManagerWindow == nil {
+        if settingsWindow == nil && favoriteEditorWindow == nil && favoriteManagerWindow == nil {
             NSApp.setActivationPolicy(.accessory)
         }
     }
@@ -226,7 +226,7 @@ extension Notification.Name {
     static let openSettingsRequest = Notification.Name("openSettingsRequest")
     static let openPopupPanel = Notification.Name("openPopupPanel")
     static let closePopupPanel = Notification.Name("closePopupPanel")
-    static let openSnippetEditor = Notification.Name("openSnippetEditor")
-    static let openSnippetManager = Notification.Name("openSnippetManager")
+    static let openFavoriteEditor = Notification.Name("openFavoriteEditor")
+    static let openFavoriteManager = Notification.Name("openFavoriteManager")
     static let shiftTabPressed = Notification.Name("shiftTabPressed")
 }
