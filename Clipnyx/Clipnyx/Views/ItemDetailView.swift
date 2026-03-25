@@ -2,6 +2,8 @@ import SwiftUI
 
 struct ItemDetailView: View {
     let item: ClipboardItem
+    var clipboardManager: ClipboardManager? = nil
+    var onDismiss: (() -> Void)? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -12,6 +14,18 @@ struct ItemDetailView: View {
                 Text(item.category.label)
                     .font(.headline)
                 Spacer()
+            }
+
+            if let favoriteName = item.favoriteName {
+                LabeledContent("Favorite") {
+                    Text(favoriteName)
+                }
+                if let folderId = item.favoriteFolderId,
+                   let folder = clipboardManager?.favoriteFolders.first(where: { $0.id == folderId }) {
+                    LabeledContent("Folder") {
+                        Text(folder.name)
+                    }
+                }
             }
 
             Divider()
@@ -73,6 +87,13 @@ struct ItemDetailView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
+            }
+
+            Divider()
+            Button {
+                NotificationCenter.default.post(name: .openFavoriteManager, object: item)
+            } label: {
+                Label("Open in Collection", systemImage: "books.vertical")
             }
         }
         .padding()

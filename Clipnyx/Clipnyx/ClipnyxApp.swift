@@ -19,6 +19,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let clipboardManager = ClipboardManager()
     private var popupController = PopupPanelController()
     private var settingsWindow: NSWindow?
+    private var favoriteManagerWindow: NSWindow?
     #if ENABLE_SPARKLE
     let updateManager = UpdateManager()
     #endif
@@ -44,6 +45,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             name: .openPopupPanel,
             object: nil
         )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleOpenFavoriteManager(_:)),
+            name: .openFavoriteManager,
+            object: nil
+        )
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -55,8 +62,46 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         popupController.toggle(clipboardManager: clipboardManager)
     }
 
+    @objc private func handleOpenFavoriteManager(_ notification: Notification) {
+        let item = notification.object as? ClipboardItem
+        showFavoriteManager(selectItem: item)
+    }
+
+    // MARK: - Library
+
+    private func showFavoriteManager(selectItem: ClipboardItem?) {
+        popupController.close(restoreFocus: false)
+
+        if let favoriteManagerWindow {
+            favoriteManagerWindow.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            if let selectItem {
+                NotificationCenter.default.post(name: .selectLibraryItem, object: selectItem)
+            }
+            return
+        }
+
+        let managerView = FavoriteManagerView(clipboardManager: clipboardManager, initialItemId: selectItem?.id)
+
+        let window = NSWindow(
+            contentViewController: NSHostingController(rootView: managerView)
+        )
+        window.styleMask = [.titled, .closable, .resizable]
+        window.title = String(localized: "Collection")
+        window.setContentSize(NSSize(width: 800, height: 500))
+        window.isReleasedWhenClosed = false
+        self.favoriteManagerWindow = window
+
+        window.delegate = self
+        window.center()
+        window.makeKeyAndOrderFront(nil)
+        NSApp.setActivationPolicy(.regular)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
+    // MARK: - Settings
+
     @objc private func handleShowSettings() {
-        // MenuBarExtra パネルを閉じる
         for window in NSApp.windows where window is NSPanel && window.isVisible {
             window.orderOut(nil)
         }
@@ -113,9 +158,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
 extension AppDelegate: NSWindowDelegate {
     func windowWillClose(_ notification: Notification) {
-        guard (notification.object as? NSWindow) === settingsWindow else { return }
-        settingsWindow = nil
-        NSApp.setActivationPolicy(.accessory)
+        let window = notification.object as? NSWindow
+        if window === settingsWindow {
+            settingsWindow = nil
+        } else if window === favoriteManagerWindow {
+            favoriteManagerWindow = nil
+        }
+        if settingsWindow == nil && favoriteManagerWindow == nil {
+            NSApp.setActivationPolicy(.accessory)
+        }
     }
 }
 
@@ -123,4 +174,7 @@ extension Notification.Name {
     static let openSettingsRequest = Notification.Name("openSettingsRequest")
     static let openPopupPanel = Notification.Name("openPopupPanel")
     static let closePopupPanel = Notification.Name("closePopupPanel")
+    static let openFavoriteManager = Notification.Name("openFavoriteManager")
+    static let shiftTabPressed = Notification.Name("shiftTabPressed")
+    static let selectLibraryItem = Notification.Name("selectLibraryItem")
 }

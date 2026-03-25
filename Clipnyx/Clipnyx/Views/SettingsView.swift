@@ -68,9 +68,9 @@ struct HistoryTab: View {
                 }
 
                 LabeledContent("Current Items") {
-                    let pinnedCount = clipboardManager.items.filter(\.isPinned).count
-                    if pinnedCount > 0 {
-                        Text("\(clipboardManager.items.count) items (\(pinnedCount) pinned)")
+                    let savedCount = clipboardManager.items.filter(\.isSaved).count
+                    if savedCount > 0 {
+                        Text("\(clipboardManager.items.count) items (\(savedCount) saved)")
                     } else {
                         Text("\(clipboardManager.items.count) items")
                     }
@@ -82,11 +82,17 @@ struct HistoryTab: View {
             }
 
             Section {
+                Button("Collection") {
+                    NotificationCenter.default.post(name: .openFavoriteManager, object: nil)
+                }
+            }
+
+            Section {
                 Button("Delete History", role: .destructive) {
                     clipboardManager.removeAllItems()
                 }
             } footer: {
-                Text("Pinned items will not be deleted.")
+                Text("Saved items will not be deleted.")
             }
         }
     }

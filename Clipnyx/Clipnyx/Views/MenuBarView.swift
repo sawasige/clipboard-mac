@@ -18,6 +18,14 @@ struct MenuBarView: View {
             Divider()
 
             Button {
+                NotificationCenter.default.post(name: .openFavoriteManager, object: nil)
+            } label: {
+                Label("Collection", systemImage: "books.vertical")
+            }
+
+            Divider()
+
+            Button {
                 clipboardManager.isPaused.toggle()
             } label: {
                 Label(

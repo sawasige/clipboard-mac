@@ -7,23 +7,50 @@ struct PopupContentView: View {
 
     @State private var searchText = ""
     @State private var selectedIndex = 0
-    /// キーボード操作中は onHover による選択更新とスクロール追従を切り替える。
-    /// キー入力で true、マウス移動で false。
     @State private var keyboardNavigation = true
-    /// マウスが実際に動いたかを判定するためのスクリーン座標。
-    /// onContinuousHover はビュー相対座標を返すため、layout shift（contentHeight 変化等）で
-    /// マウスが静止していても座標が変わる。NSEvent.mouseLocation（スクリーン座標）なら影響を受けない。
     @State private var lastScreenPosition: CGPoint?
     @State private var selectedCategory: ClipboardContentCategory?
-    @State private var showPinnedOnly = false
+    @State private var savedFilterIndex = 0  // 0=off, 1=all saved, 2=uncategorized, 3+=favorite folders
     @State private var listContentHeight: CGFloat = 0
     @State private var detailItem: ClipboardItem?
     @FocusState private var isSearchFocused: Bool
 
+    private var showSavedOnly: Bool { savedFilterIndex > 0 }
+
+    /// Tab cycle: 0=off, 1=all saved, 2=uncategorized, 3,4,...=favorite folders
+    private var savedFilterCycleCount: Int {
+        3 + clipboardManager.favoriteFolders.count
+    }
+
+    private var selectedFavoriteFolderId: UUID? {
+        let sortedFolders = clipboardManager.favoriteFolders.sorted(by: { $0.order < $1.order })
+        let folderIndex = savedFilterIndex - 3
+        guard folderIndex >= 0, folderIndex < sortedFolders.count else { return nil }
+        return sortedFolders[folderIndex].id
+    }
+
+    private var savedFilterLabel: String? {
+        switch savedFilterIndex {
+        case 0: return nil
+        case 1: return String(localized: "All Saved")
+        case 2: return String(localized: "Uncategorized")
+        default:
+            if let id = selectedFavoriteFolderId,
+               let folder = clipboardManager.favoriteFolders.first(where: { $0.id == id }) {
+                return folder.name
+            }
+            return nil
+        }
+    }
+
     private var filteredItems: [ClipboardItem] {
         var result = clipboardManager.items
-        if showPinnedOnly {
-            result = result.filter(\.isPinned)
+        if savedFilterIndex == 1 {
+            result = result.filter(\.isSaved)
+        } else if savedFilterIndex == 2 {
+            result = result.filter { $0.isSaved && $0.favoriteFolderId == nil }
+        } else if let folderId = selectedFavoriteFolderId {
+            result = result.filter { $0.favoriteFolderId == folderId }
         }
         if let category = selectedCategory {
             result = result.filter { $0.category == category }
@@ -31,6 +58,7 @@ struct PopupContentView: View {
         if !searchText.isEmpty {
             result = result.filter {
                 $0.previewText.localizedCaseInsensitiveContains(searchText)
+                || ($0.favoriteName?.localizedCaseInsensitiveContains(searchText) ?? false)
             }
         }
         return result
@@ -56,18 +84,22 @@ struct PopupContentView: View {
                     .buttonStyle(.plain)
                 }
 
-                // Pin filter
+                // Saved filter
                 Button {
-                    showPinnedOnly.toggle()
+                    if savedFilterIndex > 0 {
+                        savedFilterIndex = 0
+                    } else {
+                        savedFilterIndex = 1
+                    }
                     selectedIndex = 0
                 } label: {
-                    Image(systemName: showPinnedOnly ? "pin.fill" : "pin")
-                        .foregroundStyle(showPinnedOnly ? .orange : .secondary)
+                    Image(systemName: showSavedOnly ? "bookmark.fill" : "bookmark")
+                        .foregroundStyle(showSavedOnly ? .orange : .secondary)
                 }
                 .buttonStyle(.plain)
-                .help(showPinnedOnly ? Text("Show All") : Text("Pinned Only"))
+                .help(showSavedOnly ? Text("Show All") : Text("Saved Only"))
 
-                // Category filter
+                // Category filter (content categories only)
                 Menu {
                     Button {
                         selectedCategory = nil
@@ -90,20 +122,50 @@ struct PopupContentView: View {
                 .fixedSize()
                 .help("Filter")
 
+                // Collection
+                Button {
+                    NotificationCenter.default.post(name: .openFavoriteManager, object: nil)
+                } label: {
+                    Image(systemName: "books.vertical")
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .help("Collection")
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
 
             Divider()
 
-            historyContent
+            // Favorite folder chips (visible when saved filter is active)
+            if showSavedOnly {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 6) {
+                        folderChip(String(localized: "All Saved"), isSelected: savedFilterIndex == 1) {
+                            savedFilterIndex = 1
+                            selectedIndex = 0
+                        }
+                        folderChip(String(localized: "Uncategorized"), isSelected: savedFilterIndex == 2) {
+                            savedFilterIndex = 2
+                            selectedIndex = 0
+                        }
+                        ForEach(Array(clipboardManager.favoriteFolders.sorted(by: { $0.order < $1.order }).enumerated()), id: \.element.id) { i, folder in
+                            folderChip(folder.name, isSelected: savedFilterIndex == 3 + i) {
+                                savedFilterIndex = 3 + i
+                                selectedIndex = 0
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                }
+                Divider()
+            }
 
+            historyContent
         }
         .background(Color(nsColor: .windowBackgroundColor))
         .clipShape(RoundedRectangle(cornerRadius: 12))
-        // マウスが実際に動いた時だけ keyboardNavigation を解除する。
-        // onContinuousHover のビュー相対座標は layout shift で変わるため、
-        // スクリーン座標（NSEvent.mouseLocation）で判定する。
         .onContinuousHover { phase in
             if case .active = phase {
                 let screenPos = NSEvent.mouseLocation
@@ -119,7 +181,10 @@ struct PopupContentView: View {
                 }
             }
         }
-        .onKeyPress(keys: [.upArrow, .downArrow, .return, .escape, .tab]) { press in
+        .onKeyPress(keys: [.upArrow, .downArrow, .return, .escape]) { press in
+            handleKeyPress(press)
+        }
+        .onKeyPress(keys: [.tab], phases: [.down, .repeat]) { press in
             handleKeyPress(press)
         }
         .onKeyPress(characters: CharacterSet(charactersIn: "np")) { press in
@@ -135,8 +200,13 @@ struct PopupContentView: View {
         .onChange(of: searchText) { _, _ in
             selectedIndex = 0
         }
+        .onReceive(NotificationCenter.default.publisher(for: .shiftTabPressed)) { _ in
+            let count = savedFilterCycleCount
+            savedFilterIndex = (savedFilterIndex - 1 + count) % count
+            selectedIndex = 0
+        }
         .popover(item: $detailItem) { item in
-            ItemDetailView(item: item)
+            ItemDetailView(item: item, clipboardManager: clipboardManager, onDismiss: { detailItem = nil })
         }
     }
 
@@ -146,10 +216,10 @@ struct PopupContentView: View {
     private var historyContent: some View {
         if filteredItems.isEmpty {
             ContentUnavailableView {
-                Label(showPinnedOnly ? "No Pinned Items" : "No History", systemImage: showPinnedOnly ? "pin.slash" : "clipboard")
+                Label(showSavedOnly ? "No Saved Items" : "No History", systemImage: showSavedOnly ? "bookmark.slash" : "clipboard")
             } description: {
-                if showPinnedOnly {
-                    Text("Pin items to keep them here")
+                if showSavedOnly {
+                    Text("Save items to keep them here")
                 } else if searchText.isEmpty {
                     Text("Copied content will appear here")
                 } else {
@@ -189,8 +259,8 @@ struct PopupContentView: View {
             item: item,
             index: index,
             isSelected: index == selectedIndex,
-            onPin: {
-                clipboardManager.togglePin(item)
+            onBookmark: {
+                clipboardManager.toggleSave(item)
             },
             onSelect: {
                 selectedIndex = index
@@ -214,6 +284,19 @@ struct PopupContentView: View {
         }
     }
 
+    private func folderChip(_ label: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(label)
+                .font(.caption)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(isSelected ? Color.accentColor.opacity(0.2) : Color.secondary.opacity(0.1))
+                .foregroundStyle(isSelected ? Color.accentColor : .secondary)
+                .clipShape(Capsule())
+        }
+        .buttonStyle(.plain)
+    }
+
     private var activeCategories: [ClipboardContentCategory] {
         let present = Set(clipboardManager.items.map(\.category))
         return ClipboardContentCategory.allCases.filter { present.contains($0) }
@@ -221,7 +304,6 @@ struct PopupContentView: View {
 
     // MARK: - Key Handling
 
-    /// IMEが未確定文字列を持っているかを判定する。
     private var isIMEComposing: Bool {
         guard let inputContext = NSTextInputContext.current else { return false }
         return inputContext.client.markedRange().length > 0
@@ -229,7 +311,12 @@ struct PopupContentView: View {
 
     private func handleKeyPress(_ press: KeyPress) -> KeyPress.Result {
         if press.key == .tab {
-            showPinnedOnly.toggle()
+            let count = savedFilterCycleCount
+            if press.modifiers.contains(.shift) {
+                savedFilterIndex = (savedFilterIndex - 1 + count) % count
+            } else {
+                savedFilterIndex = (savedFilterIndex + 1) % count
+            }
             selectedIndex = 0
             return .handled
         }
@@ -308,7 +395,7 @@ private struct UnifiedItemRow: View {
     let item: ClipboardItem
     let index: Int
     let isSelected: Bool
-    let onPin: () -> Void
+    let onBookmark: () -> Void
     let onSelect: () -> Void
     let onShowDetail: () -> Void
     let onDelete: () -> Void
@@ -326,55 +413,38 @@ private struct UnifiedItemRow: View {
                 Spacer().frame(width: 16)
             }
 
-            // Category icon (with pin overlay)
+            // Category icon (with saved overlay)
             ZStack(alignment: .bottomTrailing) {
                 Image(systemName: item.category.icon)
                     .font(.callout)
                     .foregroundStyle(item.category.color)
                     .frame(width: 18)
 
-                if item.isPinned {
-                    Image(systemName: "pin.fill")
+                if item.isSaved {
+                    Image(systemName: "bookmark.fill")
                         .font(.system(size: 7))
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(item.isFavoriteItem ? Color.accentColor : .orange)
                         .offset(x: 4, y: 2)
                 }
             }
 
             VStack(alignment: .leading, spacing: 2) {
+                if let favoriteName = item.favoriteName {
+                    Text(favoriteName)
+                        .font(.callout.bold())
+                        .foregroundStyle(Color.accentColor)
+                        .lineLimit(1)
+                }
                 ItemPreviewContent(item: item, maxThumbnailHeight: 40)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
             ZStack {
                 if isSelected {
-                    HStack(spacing: 8) {
-                        Button {
-                            onPin()
-                        } label: {
-                            Image(systemName: item.isPinned ? "pin.slash" : "pin")
-                                .font(.callout)
-                        }
-                        .buttonStyle(.plain)
-                        .foregroundStyle(item.isPinned ? .orange : .secondary)
-
-                        Button {
-                            onShowDetail()
-                        } label: {
-                            Image(systemName: "info.circle")
-                                .font(.callout)
-                        }
-                        .buttonStyle(.plain)
-                        .foregroundStyle(.secondary)
-
-                        Button {
-                            onDelete()
-                        } label: {
-                            Image(systemName: "trash")
-                                .font(.callout)
-                        }
-                        .buttonStyle(.plain)
-                        .foregroundStyle(.red)
+                    HStack(spacing: 4) {
+                        ActionButton(icon: item.isSaved ? "bookmark.fill" : "bookmark", color: item.isSaved ? .orange : .secondary, action: onBookmark)
+                        ActionButton(icon: "info.circle", color: .secondary, action: onShowDetail)
+                        ActionButton(icon: "trash", color: .red, action: onDelete)
                     }
                 } else {
                     Text(item.formattedDataSize)
@@ -382,7 +452,7 @@ private struct UnifiedItemRow: View {
                         .foregroundStyle(.tertiary)
                 }
             }
-            .frame(width: 72, alignment: .trailing)
+            .frame(width: 84, height: 24, alignment: .trailing)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
@@ -405,9 +475,9 @@ private struct UnifiedItemRow: View {
             }
             Divider()
             Button {
-                onPin()
+                onBookmark()
             } label: {
-                Label(item.isPinned ? "Unpin" : "Pin", systemImage: item.isPinned ? "pin.slash" : "pin")
+                Label(item.isSaved ? "Unsave" : "Save", systemImage: item.isSaved ? "bookmark.slash" : "bookmark")
             }
             Button {
                 onShowDetail()
@@ -420,6 +490,26 @@ private struct UnifiedItemRow: View {
                 Label("Delete", systemImage: "trash")
             }
         }
+    }
+}
+
+private struct ActionButton: View {
+    let icon: String
+    let color: Color
+    let action: () -> Void
+    @State private var isHovered = false
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: icon)
+                .font(.system(size: 13))
+                .foregroundStyle(isHovered ? color : .secondary)
+                .frame(width: 24, height: 24)
+                .background(isHovered ? color.opacity(0.12) : .clear)
+                .clipShape(RoundedRectangle(cornerRadius: 5))
+        }
+        .buttonStyle(.plain)
+        .onHover { isHovered = $0 }
     }
 }
 

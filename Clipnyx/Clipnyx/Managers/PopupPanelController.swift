@@ -11,6 +11,16 @@ private class KeyablePanel: NSPanel {
     override func cancelOperation(_ sender: Any?) {
         onEscape?()
     }
+
+    override func sendEvent(_ event: NSEvent) {
+        if event.type == .keyDown,
+           event.keyCode == 48 /* Tab */,
+           event.modifierFlags.contains(.shift) {
+            NotificationCenter.default.post(name: .shiftTabPressed, object: nil)
+            return
+        }
+        super.sendEvent(event)
+    }
 }
 
 @MainActor
@@ -19,6 +29,7 @@ final class PopupPanelController {
     private var panel: NSPanel?
     private var previousApp: NSRunningApplication?
     private var clickMonitor: Any?
+    private var localClickMonitor: Any?
     private var appActivationObserver: NSObjectProtocol?
     var isVisible: Bool = false
 
@@ -98,6 +109,10 @@ final class PopupPanelController {
             NSEvent.removeMonitor(monitor)
             clickMonitor = nil
         }
+        if let monitor = localClickMonitor {
+            NSEvent.removeMonitor(monitor)
+            localClickMonitor = nil
+        }
         if let observer = appActivationObserver {
             NSWorkspace.shared.notificationCenter.removeObserver(observer)
             appActivationObserver = nil
@@ -169,6 +184,13 @@ final class PopupPanelController {
         guard clickMonitor == nil else { return }
         clickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
             self?.close()
+        }
+        localClickMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] event in
+            guard let self, let panel = self.panel else { return event }
+            if event.window !== panel && event.window?.parent !== panel {
+                self.close(restoreFocus: false)
+            }
+            return event
         }
     }
 
