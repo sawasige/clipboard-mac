@@ -42,6 +42,12 @@ brew install sawasige/clipnyx/clipnyx
 | ダイレクトペースト | ✓ | ✓ |
 | 自動アップデート | App Store 経由 | Sparkle / `brew upgrade` |
 
+## 更新履歴
+
+[Changelog](https://sawasige.github.io/clipnyx/changelog.html)
+
+リリースノートは `RELEASE_NOTES.md` に日英で記述し、CIが appcast.xml に埋め込みます。
+
 ## プライバシーポリシー
 
 [プライバシーポリシー](https://sawasige.github.io/clipnyx/privacy-policy.html)

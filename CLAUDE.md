@@ -62,7 +62,13 @@ Clipnyx/Clipnyx/
   - App Store 版: 上記タグ作成が Xcode Cloud をトリガー → Archive → TestFlight アップロード
 - **ci_scripts/ci_post_clone.sh**: タグからバージョン抽出して pbxproj を更新
 - **Fastlane**: `fastlane metadata` でApp Storeメタデータ・スクリーンショットをアップロード
-- **GitHub Pages**: `docs/` 配下を自動デプロイ（ランディングページ、プライバシーポリシー、appcast.xml）
+- **GitHub Pages**: `docs/` 配下を自動デプロイ（ランディングページ、プライバシーポリシー、appcast.xml、changelog）
+
+## リリースノート運用
+- リリース前に `RELEASE_NOTES.md` に日本語と英語でリリースノートを記述（`<!-- en -->` で区切る）
+- CIが `RELEASE_NOTES.md` を読んで `docs/appcast.xml` の `<description>` に日英で埋め込む
+- `docs/changelog.html` が `appcast.xml` を読んでリリース履歴を動的表示（日英切り替え対応）
+- ランディングページのフッターから changelog.html にリンク
 
 ## コミット規約
 - コミットメッセージは日本語
