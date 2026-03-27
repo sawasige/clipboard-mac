@@ -149,13 +149,35 @@ jobs:
           PUB_DATE=$(date -u '+%a, %d %b %Y %H:%M:%S %z')
           DMG_URL="https://github.com/sawasige/clipnyx/releases/download/${TAG}/${APP_NAME}.dmg"
           python3 -c "
-          import sys
+          import sys, html
+
+          # Read release notes (ja / en split by <!-- en -->)
+          notes_ja = ''
+          notes_en = ''
+          try:
+              raw = open('RELEASE_NOTES.md').read().strip()
+              if '<!-- en -->' in raw:
+                  parts = raw.split('<!-- en -->')
+                  notes_ja = html.escape(parts[0].strip())
+                  notes_en = html.escape(parts[1].strip())
+              else:
+                  notes_ja = html.escape(raw)
+                  notes_en = notes_ja
+          except FileNotFoundError:
+              pass
+
+          desc_block = ''
+          if notes_en:
+              desc_block = '''
+              <description><![CDATA[''' + notes_en + ''']]></description>
+              <description xml:lang=\"ja\"><![CDATA[''' + notes_ja + ''']]></description>'''
+
           appcast = open('docs/appcast.xml').read()
           item = '''    <item>
               <title>${VERSION}</title>
               <pubDate>${PUB_DATE}</pubDate>
               <sparkle:version>${GITHUB_RUN_NUMBER}</sparkle:version>
-              <sparkle:shortVersionString>${VERSION}</sparkle:shortVersionString>
+              <sparkle:shortVersionString>${VERSION}</sparkle:shortVersionString>''' + desc_block + '''
               <enclosure url=\"${DMG_URL}\" length=\"${DMG_SIZE}\" type=\"application/octet-stream\" sparkle:edSignature=\"${SPARKLE_ATTRS}\" />
             </item>'''
           marker = '<!-- Items are prepended by CI on each release -->'

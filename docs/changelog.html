@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clipnyx — Changelog</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <style>
+    :root {
+      --color-bg: #ffffff;
+      --color-surface: #f5f5f7;
+      --color-text: #1d1d1f;
+      --color-text-secondary: #86868b;
+      --color-accent: #0071e3;
+      --color-border: #d2d2d7;
+      --color-card-bg: #ffffff;
+      --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.06);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --color-bg: #000000;
+        --color-surface: #1c1c1e;
+        --color-text: #f5f5f7;
+        --color-text-secondary: #86868b;
+        --color-accent: #2997ff;
+        --color-border: #38383a;
+        --color-card-bg: #1c1c1e;
+        --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.3);
+      }
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
+      background: var(--color-bg);
+      color: var(--color-text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    header {
+      text-align: center;
+      padding: 60px 24px 40px;
+    }
+
+    header h1 {
+      font-size: 36px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+
+    header p {
+      color: var(--color-text-secondary);
+    }
+
+    .lang-switch {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .lang-switch button {
+      background: none;
+      border: 1px solid var(--color-border);
+      padding: 6px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      color: var(--color-text-secondary);
+      font-size: 14px;
+      margin: 0 4px;
+    }
+
+    .lang-switch button.active {
+      background: var(--color-accent);
+      color: #fff;
+      border-color: var(--color-accent);
+    }
+
+    .release {
+      border-bottom: 1px solid var(--color-border);
+      padding: 24px 0;
+    }
+
+    .release:last-child {
+      border-bottom: none;
+    }
+
+    .release-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 12px;
+    }
+
+    .release-version {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .release-date {
+      font-size: 14px;
+      color: var(--color-text-secondary);
+    }
+
+    .release-notes {
+      white-space: pre-line;
+      font-size: 15px;
+      color: var(--color-text);
+    }
+
+    .back-link {
+      text-align: center;
+      padding: 40px 0 60px;
+    }
+
+    .back-link a {
+      color: var(--color-accent);
+      text-decoration: none;
+      font-size: 15px;
+    }
+
+    .back-link a:hover {
+      text-decoration: underline;
+    }
+
+    #loading {
+      text-align: center;
+      padding: 60px 0;
+      color: var(--color-text-secondary);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Changelog</h1>
+    <p id="subtitle">Clipnyx release history</p>
+  </header>
+
+  <div class="container">
+    <div class="lang-switch">
+      <button id="btn-ja" class="active" onclick="setLang('ja')">日本語</button>
+      <button id="btn-en" onclick="setLang('en')">English</button>
+    </div>
+
+    <div id="loading">Loading...</div>
+    <div id="releases"></div>
+
+    <div class="back-link">
+      <a href="./">← Clipnyx</a>
+    </div>
+  </div>
+
+  <script>
+    let currentLang = 'ja';
+    let releasesData = [];
+
+    function setLang(lang) {
+      currentLang = lang;
+      document.getElementById('btn-ja').className = lang === 'ja' ? 'active' : '';
+      document.getElementById('btn-en').className = lang === 'en' ? 'active' : '';
+      document.getElementById('subtitle').textContent =
+        lang === 'ja' ? 'Clipnyx リリース履歴' : 'Clipnyx release history';
+      renderReleases();
+    }
+
+    function parseAppcast(xml) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(xml, 'text/xml');
+      const items = doc.querySelectorAll('item');
+      const releases = [];
+
+      items.forEach(item => {
+        const version = item.querySelector('shortVersionString')?.textContent || item.querySelector('title')?.textContent || '';
+        const pubDate = item.querySelector('pubDate')?.textContent || '';
+
+        // Get descriptions
+        const descriptions = item.querySelectorAll('description');
+        let notesJa = '';
+        let notesEn = '';
+        descriptions.forEach(desc => {
+          const lang = desc.getAttribute('xml:lang');
+          if (lang === 'ja') {
+            notesJa = desc.textContent.trim();
+          } else if (!lang) {
+            notesEn = desc.textContent.trim();
+          }
+        });
+
+        releases.push({ version, pubDate, notesJa, notesEn });
+      });
+
+      return releases.reverse();
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '';
+      try {
+        const d = new Date(dateStr);
+        return d.toLocaleDateString(currentLang === 'ja' ? 'ja-JP' : 'en-US', {
+          year: 'numeric', month: 'long', day: 'numeric'
+        });
+      } catch {
+        return dateStr;
+      }
+    }
+
+    function renderReleases() {
+      const container = document.getElementById('releases');
+      container.innerHTML = releasesData.map(r => {
+        const notes = currentLang === 'ja' ? (r.notesJa || r.notesEn || '') : (r.notesEn || r.notesJa || '');
+        return `
+          <div class="release">
+            <div class="release-header">
+              <span class="release-version">v${r.version}</span>
+              <span class="release-date">${formatDate(r.pubDate)}</span>
+            </div>
+            ${notes ? `<div class="release-notes">${notes}</div>` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    fetch('appcast.xml')
+      .then(res => res.text())
+      .then(xml => {
+        releasesData = parseAppcast(xml);
+        document.getElementById('loading').style.display = 'none';
+        renderReleases();
+      })
+      .catch(() => {
+        document.getElementById('loading').textContent = 'Failed to load changelog.';
+      });
+  </script>
+</body>
+</html>
