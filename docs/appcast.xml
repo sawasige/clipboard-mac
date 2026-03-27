@@ -66,6 +66,8 @@
     <pubDate>Fri, 20 Mar 2026 09:55:09 +0000</pubDate>
     <sparkle:version>14</sparkle:version>
     <sparkle:shortVersionString>1.2.0</sparkle:shortVersionString>
+    <description><![CDATA[- UI redesign and various improvements]]></description>
+    <description xml:lang="ja"><![CDATA[- UIリデザインと各種改善]]></description>
     <enclosure url="https://github.com/sawasige/clipnyx/releases/download/v1.2.0/Clipnyx.dmg" length="4562366" type="application/octet-stream" sparkle:edSignature="wS5WuEviuY0AkF0Y3VruaiEb20VP9fnDR+Bj6PCHYiuWs2M+xJKkBbhkYEQy3S/XZVoELu4jT20rE1w5cEJNCQ==" />
   </item>
         <item>
@@ -73,6 +75,8 @@
     <pubDate>Sun, 22 Mar 2026 00:41:05 +0000</pubDate>
     <sparkle:version>16</sparkle:version>
     <sparkle:shortVersionString>1.2.1</sparkle:shortVersionString>
+    <description><![CDATA[- Bug fixes]]></description>
+    <description xml:lang="ja"><![CDATA[- バグ修正]]></description>
     <enclosure url="https://github.com/sawasige/clipnyx/releases/download/v1.2.1/Clipnyx.dmg" length="4570466" type="application/octet-stream" sparkle:edSignature="xJtYL6+lUrVWZ/DbYUmfVrRCoNNDQfhkDK171pnoUamvVC4MCcxdnTuHrcwdtIwY1MrqOMnLvmWUHkmY5HerCw==" />
   </item>
         <item>
@@ -80,6 +84,8 @@
     <pubDate>Mon, 23 Mar 2026 11:05:30 +0000</pubDate>
     <sparkle:version>17</sparkle:version>
     <sparkle:shortVersionString>1.2.2</sparkle:shortVersionString>
+    <description><![CDATA[- Bug fixes]]></description>
+    <description xml:lang="ja"><![CDATA[- バグ修正]]></description>
     <enclosure url="https://github.com/sawasige/clipnyx/releases/download/v1.2.2/Clipnyx.dmg" length="4550384" type="application/octet-stream" sparkle:edSignature="DDQtcJiJ/peYKiYeHgbD1SgoNfS+DxpcI+yLiSskMO3jDr5ZM83/QkfLVM5Zm0FlR8ii4dwMVZ0nMlB1h0GjCw==" />
   </item>
         <item>
@@ -87,6 +93,10 @@
     <pubDate>Wed, 25 Mar 2026 07:09:20 +0000</pubDate>
     <sparkle:version>18</sparkle:version>
     <sparkle:shortVersionString>1.3.0</sparkle:shortVersionString>
+    <description><![CDATA[- Added favorites, folders, and Collection screen
+- Added plain text conversion]]></description>
+    <description xml:lang="ja"><![CDATA[- お気に入り・フォルダ・コレクション画面を追加
+- プレーンテキスト変換を追加]]></description>
     <enclosure url="https://github.com/sawasige/clipnyx/releases/download/v1.3.0/Clipnyx.dmg" length="4751382" type="application/octet-stream" sparkle:edSignature="J287pWjNzKsmZiYVx9t5RKeJ6shajC/tUctRSbgs854ak4neDAVdW2hpqFcO+QFx2gC0F0CRqvPbDYyV/F0rDg==" />
   </item>
         <item>
@@ -94,6 +104,8 @@
     <pubDate>Thu, 26 Mar 2026 07:14:07 +0000</pubDate>
     <sparkle:version>19</sparkle:version>
     <sparkle:shortVersionString>1.3.1</sparkle:shortVersionString>
+    <description><![CDATA[- UI improvements]]></description>
+    <description xml:lang="ja"><![CDATA[- UIの改善]]></description>
     <enclosure url="https://github.com/sawasige/clipnyx/releases/download/v1.3.1/Clipnyx.dmg" length="4759893" type="application/octet-stream" sparkle:edSignature="kKRI73dbzEFUe6YUJTBWzxvELuc539Sk7aDzlk3doaioNebSMFP0B5NLcvC534WGcnDl/phkdXtwvNEmO4PBCA==" />
   </item>
     <!-- Items are prepended by CI on each release -->
