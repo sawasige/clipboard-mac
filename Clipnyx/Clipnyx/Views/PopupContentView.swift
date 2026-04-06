@@ -55,10 +55,11 @@ struct PopupContentView: View {
         if let category = selectedCategory {
             result = result.filter { $0.category == category }
         }
-        if !searchText.isEmpty {
+        let trimmedSearch = searchText.trimmingCharacters(in: .whitespaces)
+        if !trimmedSearch.isEmpty {
             result = result.filter {
-                $0.previewText.localizedCaseInsensitiveContains(searchText)
-                || ($0.favoriteName?.localizedCaseInsensitiveContains(searchText) ?? false)
+                $0.previewText.localizedCaseInsensitiveContains(trimmedSearch)
+                || ($0.favoriteName?.localizedCaseInsensitiveContains(trimmedSearch) ?? false)
             }
         }
         return result
@@ -375,7 +376,8 @@ struct PopupContentView: View {
     }
 
     private func handleNumberKey(_ press: KeyPress) -> KeyPress.Result {
-        guard let char = press.characters.first,
+        guard searchText.isEmpty,
+              let char = press.characters.first,
               let num = Int(String(char)),
               num >= 1, num <= 9 else {
             return .ignored
