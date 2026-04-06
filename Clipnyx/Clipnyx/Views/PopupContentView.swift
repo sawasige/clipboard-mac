@@ -280,7 +280,8 @@ struct PopupContentView: View {
             },
             onPastePlainText: {
                 selectAndPaste(item: item, asPlainText: true)
-            }
+            },
+            showNumberBadge: searchText.isEmpty
         )
         .id(item.id)
         .onHover { hovering in
@@ -407,11 +408,12 @@ private struct UnifiedItemRow: View {
     let onShowDetail: () -> Void
     let onDelete: () -> Void
     let onPastePlainText: () -> Void
+    var showNumberBadge: Bool = true
 
     var body: some View {
         HStack(spacing: 6) {
             // Number badge (1-9)
-            if index < 9 {
+            if showNumberBadge, index < 9 {
                 Text("\(index + 1)")
                     .font(.caption.monospaced())
                     .foregroundStyle(.secondary)
