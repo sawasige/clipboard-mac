@@ -117,6 +117,15 @@
     <description xml:lang="ja"><![CDATA[- ペーストパネルの検索欄が空のときのみ数字キー(1-9)でダイレクトペーストが動作するように変更。検索中は数字を入力できるようになりました]]></description>
     <enclosure url="https://github.com/sawasige/clipnyx/releases/download/v1.3.2/Clipnyx.dmg" length="4761043" type="application/octet-stream" sparkle:edSignature="sX5Odj3aXWVqba0zuio4G3G7gZjRjnSA6yvt8okajHRxRtmOlnlzlPlwN9P/lw6d3zolG7Br2YTTF3n63O5VDw==" />
   </item>
+        <item>
+    <title>1.3.3</title>
+    <pubDate>Tue, 14 Apr 2026 04:04:52 +0000</pubDate>
+    <sparkle:version>21</sparkle:version>
+    <sparkle:shortVersionString>1.3.3</sparkle:shortVersionString>
+    <description><![CDATA[- Number key paste now highlights the selected item before pasting]]></description>
+    <description xml:lang="ja"><![CDATA[- 数字キーでペースト時に選択アイテムをハイライト表示するように改善]]></description>
+    <enclosure url="https://github.com/sawasige/clipnyx/releases/download/v1.3.3/Clipnyx.dmg" length="4761770" type="application/octet-stream" sparkle:edSignature="cOAz0+WZA+9FFN/y0H8WjbMhTOUL0tBHJBcJVpWU0T2VZDQzgi3gl4hgc02kB0CdImmfRc2+CHD9Ux35UXiDBw==" />
+  </item>
     <!-- Items are prepended by CI on each release -->
   </channel>
 </rss>
