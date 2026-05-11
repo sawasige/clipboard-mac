@@ -200,7 +200,7 @@ struct PopupContentView: View {
             handleNumberKey(press)
         }
         .task {
-            try? await Task.sleep(for: .milliseconds(100))
+            await Task.yield()
             isSearchFocused = true
         }
         .onChange(of: searchText) { _, _ in
@@ -236,7 +236,7 @@ struct PopupContentView: View {
         } else {
             ScrollViewReader { proxy in
                 ScrollView {
-                    VStack(spacing: 2) {
+                    LazyVStack(spacing: 2) {
                         ForEach(Array(filteredItems.enumerated()), id: \.element.id) { index, item in
                             itemRow(item: item, index: index)
                         }
