@@ -1,4 +1,4 @@
-- 数字キーでペースト時に選択アイテムをハイライト表示するように改善
+- ペーストパネルの表示を高速化（パネル可視まで約460ms→約60ms、入力可能まで約910ms→約120ms）
 
 <!-- en -->
-- Number key paste now highlights the selected item before pasting
+- Faster paste panel display (panel visible: ~460ms → ~60ms, input ready: ~910ms → ~120ms)
