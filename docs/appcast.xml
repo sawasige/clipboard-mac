@@ -126,6 +126,15 @@
     <description xml:lang="ja"><![CDATA[- 数字キーでペースト時に選択アイテムをハイライト表示するように改善]]></description>
     <enclosure url="https://github.com/sawasige/clipnyx/releases/download/v1.3.3/Clipnyx.dmg" length="4761770" type="application/octet-stream" sparkle:edSignature="cOAz0+WZA+9FFN/y0H8WjbMhTOUL0tBHJBcJVpWU0T2VZDQzgi3gl4hgc02kB0CdImmfRc2+CHD9Ux35UXiDBw==" />
   </item>
+        <item>
+    <title>1.3.4</title>
+    <pubDate>Mon, 11 May 2026 02:48:07 +0000</pubDate>
+    <sparkle:version>22</sparkle:version>
+    <sparkle:shortVersionString>1.3.4</sparkle:shortVersionString>
+    <description><![CDATA[- Faster paste panel display (panel visible: ~460ms → ~60ms, input ready: ~910ms → ~120ms)]]></description>
+    <description xml:lang="ja"><![CDATA[- ペーストパネルの表示を高速化（パネル可視まで約460ms→約60ms、入力可能まで約910ms→約120ms）]]></description>
+    <enclosure url="https://github.com/sawasige/clipnyx/releases/download/v1.3.4/Clipnyx.dmg" length="4762968" type="application/octet-stream" sparkle:edSignature="xhvsDxlpA18akNUyLf60VkNdpfw8wMZfuXeQzm2YqdM9HE5KaVQB7utRHbsD2s/24P1OkTlq7Cnu5U+G6FYfBg==" />
+  </item>
     <!-- Items are prepended by CI on each release -->
   </channel>
 </rss>
